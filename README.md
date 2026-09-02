@@ -2,13 +2,13 @@
 
 E-posta, SMS ve push kanallarını destekleyecek bildirim yönetim sistemi.
 
-# Gereksinimler
+## Gereksinimler
 
 - Java 21
 - PostgreSQL
 - Maven Wrapper
 
-# Veritabanı
+## Veritabanı
 
 PostgreSQL üzerinde veritabanını oluştur:
 
@@ -18,13 +18,13 @@ CREATE DATABASE notification_db;
 
 Bağlantı ayarları `src/main/resources/application.yml` dosyasındadır.
 
-# Uygulamayı çalıştırma
+## Uygulamayı çalıştırma
 
 ```powershell
 .\mvnw.cmd spring-boot:run
 ```
 
-# Doğrulama
+## Doğrulama
 
 Uygulama çalışırken health endpoint’ini kontrol et:
 
@@ -36,8 +36,73 @@ Beklenen durum: `UP`.
 
 Flyway başlangıç sırasında `recipient`, `notification` ve `flyway_schema_history` tablolarını oluşturur.
 
-# Test
+## Test
 
 ```powershell
 .\mvnw.cmd test
 ```
+
+## REST API
+
+### Bildirim oluşturma
+
+```http
+POST /api/notifications
+Content-Type: application/json
+```
+
+Örnek istek:
+
+```json
+{
+  "channel": "EMAIL",
+  "subject": "Test bildirimi",
+  "content": "Merhaba, bu bir test bildirimidir.",
+  "recipient": {
+    "email": "test@example.com"
+  }
+}
+```
+
+Başarılı oluşturma `201 Created` döner. Yeni bildirimin başlangıç durumu `PENDING` olur.
+
+Örnek yanıt:
+
+```json
+{
+  "id": 1,
+  "recipient": {
+    "id": 1,
+    "email": "test@example.com",
+    "phoneNumber": null,
+    "deviceToken": null
+  },
+  "channel": "EMAIL",
+  "status": "PENDING",
+  "subject": "Test bildirimi",
+  "content": "Merhaba, bu bir test bildirimidir.",
+  "createdAt": "2026-09-02T20:40:01",
+  "updatedAt": "2026-09-02T20:40:01"
+}
+```
+
+### Bildirimleri listeleme
+
+```http
+GET /api/notifications?page=0&size=20&sort=createdAt,desc
+```
+
+Sonuçlar sayfalı döner. `page`, `size` ve `sort` parametreleri değiştirilebilir.
+
+### Bildirim detayı
+
+```http
+GET /api/notifications/{id}
+```
+
+Kayıt bulunursa `200 OK`, bulunamazsa `404 Not Found` döner.
+
+### Temel hata durumları
+
+- Geçersiz istek: `400 Bad Request`
+- Bulunamayan bildirim: `404 Not Found`
