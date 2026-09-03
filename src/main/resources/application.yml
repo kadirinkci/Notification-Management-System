@@ -35,11 +35,23 @@ spring:
     username: ${RABBITMQ_USERNAME:notification}
     password: ${RABBITMQ_PASSWORD:notification}
 
+    listener:
+      simple:
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-retries: 2
+          initial-interval: 1s
+          multiplier: 2.0
+          max-interval: 4s
+          stateless: true
+
 app:
   mail:
     from: ${MAIL_FROM:no-reply@elsify.local}
   sms:
     provider: ${SMS_PROVIDER:mock}
+    mock-transient-failures: ${SMS_MOCK_TRANSIENT_FAILURES:0}
   push:
     provider: ${PUSH_PROVIDER:mock}
 

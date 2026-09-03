@@ -1,6 +1,9 @@
 package com.elsify.notification.push;
 
-public class InvalidPushTokenException extends RuntimeException {
+import com.elsify.notification.exception.PermanentNotificationException;
+
+public class InvalidPushTokenException
+        extends PermanentNotificationException {
 
     public InvalidPushTokenException(String message) {
         super(message);

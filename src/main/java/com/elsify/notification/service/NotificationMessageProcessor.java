@@ -2,9 +2,13 @@ package com.elsify.notification.service;
 
 import com.elsify.notification.domain.Notification;
 import com.elsify.notification.domain.Status;
+import com.elsify.notification.exception.PermanentNotificationException;
+import com.elsify.notification.exception.TransientNotificationException;
 import com.elsify.notification.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.mail.MailException;
+import org.springframework.mail.MailPreparationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,18 +22,15 @@ public class NotificationMessageProcessor {
     private final NotificationDispatchService dispatchService;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void process(Long notificationId) {
+    public boolean process(Long notificationId) {
         Notification notification = notificationRepository
                 .findByIdForUpdate(notificationId)
-                .orElse(null);
-
-        if (notification == null) {
-            log.error(
-                    "Notification not found: id={}",
-                    notificationId
-            );
-            return;
-        }
+                .orElseThrow(() ->
+                        new PermanentNotificationException(
+                                "Notification not found: id="
+                                        + notificationId
+                        )
+                );
 
         if (notification.getStatus() != Status.PENDING) {
             log.info(
@@ -37,7 +38,7 @@ public class NotificationMessageProcessor {
                     notificationId,
                     notification.getStatus()
             );
-            return;
+            return false;
         }
 
         try {
@@ -48,13 +49,26 @@ public class NotificationMessageProcessor {
                     notificationId,
                     notification.getStatus()
             );
-        } catch (RuntimeException exception) {
-            notification.setStatus(Status.FAILED);
 
-            log.error(
-                    "Notification processing failed: id={}, channel={}",
-                    notificationId,
-                    notification.getChannel(),
+            return true;
+        } catch (
+                PermanentNotificationException
+                | TransientNotificationException exception
+        ) {
+            throw exception;
+        } catch (MailPreparationException exception) {
+            throw new PermanentNotificationException(
+                    "Email message could not be prepared",
+                    exception
+            );
+        } catch (MailException exception) {
+            throw new TransientNotificationException(
+                    "Temporary email delivery failure",
+                    exception
+            );
+        } catch (RuntimeException exception) {
+            throw new PermanentNotificationException(
+                    "Unexpected notification delivery failure",
                     exception
             );
         }
