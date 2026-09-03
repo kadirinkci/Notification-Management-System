@@ -20,7 +20,15 @@ public class NotificationMessageProducer {
         rabbitTemplate.convertAndSend(
                 RabbitMqConfig.NOTIFICATION_EXCHANGE,
                 RabbitMqConfig.NOTIFICATION_ROUTING_KEY,
-                message
+                message,
+                amqpMessage -> {
+                    amqpMessage.getMessageProperties()
+                            .setMessageId(
+                                    notificationId.toString()
+                            );
+
+                    return amqpMessage;
+                }
         );
 
         log.info(

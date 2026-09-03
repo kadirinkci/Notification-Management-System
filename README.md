@@ -254,3 +254,43 @@ RabbitMQ bağlantısı şu ortam değişkenleriyle değiştirilebilir:
 - `RABBITMQ_PORT`
 - `RABBITMQ_USERNAME`
 - `RABBITMQ_PASSWORD`
+
+## Retry, DLQ ve gönderim denemeleri
+
+Consumer tarafındaki geçici gönderim hataları exponential backoff ile yeniden denenir. Yapılandırılmış retry davranışı:
+
+- İlk gönderime ek `2` retry
+- Toplam en fazla `3` gönderim denemesi
+- İlk bekleme: `1 saniye`
+- Sonraki bekleme: `2 saniye`
+- Maksimum bekleme: `4 saniye`
+- Retry tipi: stateless
+
+Yalnızca `TransientNotificationException` yeniden denenir. Geçersiz alıcı veya push token gibi `PermanentNotificationException` hataları retry edilmeden dead-letter sürecine aktarılır.
+
+Tüm retry denemeleri başarısız olduğunda bildirim `FAILED` durumuna geçirilir ve RabbitMQ mesajı aşağıdaki DLQ'ya yönlendirilir:
+
+- Dead-letter exchange: `notification.dead-letter.exchange`
+- Dead-letter routing key: `notification.dead-letter`
+- Dead-letter queue: `notification.dispatch.dlq`
+
+Her gönderim denemesi `notification_delivery_attempt` tablosuna kaydedilir. Olası sonuçlar:
+
+- `SUCCESS`
+- `TRANSIENT_FAILURE`
+- `PERMANENT_FAILURE`
+
+Deneme kayıtlarını sorgulamak için:
+
+```sql
+SELECT
+    notification_id,
+    attempt_number,
+    outcome,
+    failure_reason,
+    attempted_at
+FROM notification_delivery_attempt
+ORDER BY notification_id, attempt_number;
+```
+
+Lokal ortamda mock SMS sağlayıcısının geçici hata üretmesi için `SMS_MOCK_TRANSIENT_FAILURES` ortam değişkeni kullanılabilir. Varsayılan değer `0` olup normal mock gönderimini etkilemez.

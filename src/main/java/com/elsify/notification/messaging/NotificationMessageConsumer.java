@@ -1,6 +1,10 @@
 package com.elsify.notification.messaging;
 
 import com.elsify.notification.config.RabbitMqConfig;
+import com.elsify.notification.domain.DeliveryAttemptOutcome;
+import com.elsify.notification.exception.PermanentNotificationException;
+import com.elsify.notification.exception.TransientNotificationException;
+import com.elsify.notification.service.NotificationDeliveryAttemptService;
 import com.elsify.notification.service.NotificationMessageProcessor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,16 +17,77 @@ import org.springframework.stereotype.Component;
 public class NotificationMessageConsumer {
 
     private final NotificationMessageProcessor messageProcessor;
+    private final NotificationDeliveryAttemptService attemptService;
 
     @RabbitListener(
             queues = RabbitMqConfig.NOTIFICATION_QUEUE
     )
     public void consume(NotificationMessage message) {
+        Long notificationId = message.notificationId();
+
         log.info(
                 "Notification message received: id={}",
-                message.notificationId()
+                notificationId
         );
 
-        messageProcessor.process(message.notificationId());
+        try {
+            boolean processed =
+                    messageProcessor.process(notificationId);
+
+            if (processed) {
+                attemptService.recordSuccess(notificationId);
+            }
+        } catch (TransientNotificationException exception) {
+            int attemptNumber = attemptService.recordFailure(
+                    notificationId,
+                    DeliveryAttemptOutcome.TRANSIENT_FAILURE,
+                    exception
+            );
+
+            log.warn(
+                    "Transient notification failure: id={}, attempt={}, reason={}",
+                    notificationId,
+                    attemptNumber,
+                    exception.getMessage()
+            );
+
+            throw exception;
+        } catch (PermanentNotificationException exception) {
+            int attemptNumber = attemptService.recordFailure(
+                    notificationId,
+                    DeliveryAttemptOutcome.PERMANENT_FAILURE,
+                    exception
+            );
+
+            log.warn(
+                    "Permanent notification failure: id={}, attempt={}, reason={}",
+                    notificationId,
+                    attemptNumber,
+                    exception.getMessage()
+            );
+
+            throw exception;
+        } catch (RuntimeException exception) {
+            PermanentNotificationException permanentException =
+                    new PermanentNotificationException(
+                            "Unexpected notification processing failure",
+                            exception
+                    );
+
+            int attemptNumber = attemptService.recordFailure(
+                    notificationId,
+                    DeliveryAttemptOutcome.PERMANENT_FAILURE,
+                    permanentException
+            );
+
+            log.error(
+                    "Unexpected notification failure: id={}, attempt={}",
+                    notificationId,
+                    attemptNumber,
+                    exception
+            );
+
+            throw permanentException;
+        }
     }
 }
