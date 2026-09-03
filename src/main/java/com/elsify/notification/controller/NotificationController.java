@@ -1,5 +1,6 @@
 package com.elsify.notification.controller;
 
+import com.elsify.notification.dto.CreateNotificationFromTemplateRequest;
 import com.elsify.notification.dto.CreateNotificationRequest;
 import com.elsify.notification.dto.NotificationResponse;
 import com.elsify.notification.service.NotificationService;
@@ -21,16 +22,20 @@ public class NotificationController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public NotificationResponse create(
-            @Valid @RequestBody CreateNotificationRequest request
-    ) {
+            @Valid @RequestBody CreateNotificationRequest request) {
         return notificationService.create(request);
+    }
+
+    @PostMapping("/from-template")
+    @ResponseStatus(HttpStatus.CREATED)
+    public NotificationResponse createFromTemplate(
+            @Valid @RequestBody CreateNotificationFromTemplateRequest request) {
+        return notificationService.createFromTemplate(request);
     }
 
     @GetMapping
     public Page<NotificationResponse> findAll(
-            @PageableDefault(size = 20, sort = "createdAt")
-            Pageable pageable
-    ) {
+            @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
         return notificationService.findAll(pageable);
     }
 
