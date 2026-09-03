@@ -4,11 +4,13 @@ import com.elsify.notification.domain.Recipient;
 import com.elsify.notification.dto.CreateNotificationFromTemplateRequest;
 import com.elsify.notification.dto.CreateNotificationRequest;
 import com.elsify.notification.dto.NotificationResponse;
+import com.elsify.notification.event.NotificationCreatedEvent;
 import com.elsify.notification.mapper.NotificationMapper;
 import com.elsify.notification.repository.NotificationRepository;
 import com.elsify.notification.repository.RecipientRepository;
 import com.elsify.notification.template.RenderedTemplate;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -27,7 +29,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final RecipientRepository recipientRepository;
     private final NotificationMapper notificationMapper;
-    private final NotificationDispatchService notificationDispatchService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public NotificationResponse create(CreateNotificationRequest request) {
@@ -39,7 +41,8 @@ public class NotificationService {
         var notification = notificationMapper.toNotification(request, recipient);
         notificationRepository.save(notification);
 
-        notificationDispatchService.dispatch(notification);
+        eventPublisher.publishEvent(
+                new NotificationCreatedEvent(notification.getId()));
 
         return notificationMapper.toResponse(notification);
     }
