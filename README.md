@@ -114,7 +114,7 @@ Gönderim akışı `NotificationService` → `NotificationDispatchService` → `
 
 Her kanal, `NotificationChannelSender` arayüzünün ayrı bir implementasyonudur. Registry, Spring tarafından bulunan sender’ları kanal değerine göre bir haritada tutar. Böylece yeni bir kanal eklemek mevcut gönderim akışını değiştirmeyi gerektirmez.
 
-`LOG` kanalı geliştirme amaçlı simülasyon yapar. `EMAIL` kanalı `JavaMailSender` üzerinden SMTP ile HTML e-posta gönderir. SMS ve push sender’ları sonraki görevlerde eklenecektir.
+`LOG` kanalı geliştirme amaçlı simülasyon yapar. `EMAIL` kanalı SMTP üzerinden HTML e-posta gönderir. `SMS` kanalı, config ile seçilen bir `SmsProvider` kullanır; şu anda lokal geliştirme için `MockSmsProvider` etkindir. Push sender sonraki görevde eklenecektir.
 
 ## MailHog ile lokal e-posta testi
 
@@ -127,3 +127,13 @@ MailHog SMTP mesajlarını gerçek kullanıcılara göndermeden yakalamak için 
 Önce MailHog çalıştırılır, ardından uygulama başlatılır. `EMAIL` kanalıyla gönderilen bildirim MailHog web arayüzünde görüntülenebilir. E-posta gövdesi HTML içeriğini destekler.
 
 SMTP bağlantı bilgileri `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` ve `MAIL_FROM` ortam değişkenleriyle değiştirilebilir.
+
+## Mock SMS testi
+
+SMS gönderimi `SmsSender` üzerinden seçili `SmsProvider` implementasyonuna aktarılır. Varsayılan sağlayıcı `MockSmsProvider` olup gerçek bir SMS göndermeden gönderimi uygulama loguna yazar.
+
+Sağlayıcı aşağıdaki ortam değişkeniyle seçilebilir:
+
+- `SMS_PROVIDER` — varsayılan değer: `mock`
+
+Mock loglarında telefon numarası maskelenir ve yalnızca son dört hanesi gösterilir. Mesaj segmenti standart metin için yaklaşık 160, Unicode metin için yaklaşık 70 karakter üzerinden hesaplanır. Gerçek NetGSM veya Twilio entegrasyonu yeni bir `SmsProvider` implementasyonu eklenerek yapılabilir.
