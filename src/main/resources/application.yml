@@ -32,6 +32,8 @@ spring:
 app:
   mail:
     from: ${MAIL_FROM:no-reply@elsify.local}
+  sms:
+    provider: ${SMS_PROVIDER:mock}
 
 logging:
   level:
