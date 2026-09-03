@@ -5,7 +5,6 @@ import com.elsify.notification.domain.Status;
 import com.elsify.notification.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,29 +12,28 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class NotificationAsyncProcessor {
+public class NotificationMessageProcessor {
 
     private final NotificationRepository notificationRepository;
     private final NotificationDispatchService dispatchService;
 
-    @Async("notificationTaskExecutor")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void process(Long notificationId) {
         Notification notification = notificationRepository
-                .findById(notificationId)
+                .findByIdForUpdate(notificationId)
                 .orElse(null);
 
         if (notification == null) {
             log.error(
-                    "Notification not found for async processing: id={}",
+                    "Notification not found: id={}",
                     notificationId
             );
             return;
         }
 
         if (notification.getStatus() != Status.PENDING) {
-            log.debug(
-                    "Notification already processed: id={}, status={}",
+            log.info(
+                    "Duplicate notification message skipped: id={}, status={}",
                     notificationId,
                     notification.getStatus()
             );
@@ -46,7 +44,7 @@ public class NotificationAsyncProcessor {
             dispatchService.dispatch(notification);
 
             log.info(
-                    "Async notification processing completed: id={}, status={}",
+                    "Notification processing completed: id={}, status={}",
                     notificationId,
                     notification.getStatus()
             );
@@ -54,7 +52,7 @@ public class NotificationAsyncProcessor {
             notification.setStatus(Status.FAILED);
 
             log.error(
-                    "Async notification processing failed: id={}, channel={}",
+                    "Notification processing failed: id={}, channel={}",
                     notificationId,
                     notification.getChannel(),
                     exception

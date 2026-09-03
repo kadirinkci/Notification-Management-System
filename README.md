@@ -8,6 +8,7 @@ E-posta, SMS ve push kanallarını destekleyecek bildirim yönetim sistemi.
 - PostgreSQL
 - Maven Wrapper
 - MailHog (lokal e-posta testi)
+- Docker Desktop (RabbitMQ için)
 
 ## Veritabanı
 
@@ -22,6 +23,7 @@ Bağlantı ayarları `src/main/resources/application.yml` dosyasındadır.
 ## Uygulamayı çalıştırma
 
 ```powershell
+docker compose up -d rabbitmq
 .\mvnw.cmd spring-boot:run
 ```
 
@@ -208,19 +210,47 @@ Content-Type: application/json
 
 Eksik veya şablonda bulunmayan fazladan değişken gönderilirse `400 Bad Request` döner. Yanıttaki `missingVariables` ve `unexpectedVariables` alanları hatalı değişkenleri gösterir.
 
-## Asenkron bildirim işleme
+## RabbitMQ ile asenkron bildirim işleme
 
-Bildirim oluşturma isteği, gönderimin tamamlanmasını beklemez. Kayıt `PENDING` durumunda oluşturulur ve transaction başarıyla tamamlandıktan sonra bir uygulama olayı yayınlanır.
+Bildirim oluşturma isteği gönderimin tamamlanmasını beklemez. Bildirim ilk olarak `PENDING` durumunda veritabanına kaydedilir. Transaction başarıyla tamamlandıktan sonra olay RabbitMQ'ya yayınlanır.
 
-Olay, `NotificationAsyncProcessor` tarafından özel `notificationTaskExecutor` thread pool’u üzerinde işlenir:
+Gönderim akışı:
 
-- Core thread sayısı: `2`
-- Maksimum thread sayısı: `4`
-- Kuyruk kapasitesi: `100`
-- Thread adı öneki: `notification-`
+```text
+NotificationService
+→ NotificationCreatedEvent
+→ NotificationMessageProducer
+→ notification.exchange
+→ notification.dispatch.queue
+→ NotificationMessageConsumer
+→ NotificationMessageProcessor
+→ kanal göndericisi
+```
 
-Gönderim başarılı olduğunda durum `SENT`, hata oluştuğunda `FAILED` olur. Güncel durum aşağıdaki endpoint ile sorgulanabilir:
+RabbitMQ yapıları:
 
-`GET /api/notifications/{id}`
+- Exchange: `notification.exchange`
+- Exchange tipi: `direct`
+- Queue: `notification.dispatch.queue`
+- Routing key: `notification.dispatch`
+- AMQP portu: `5672`
+- Yönetim arayüzü: `http://localhost:15672`
+- Lokal kullanıcı adı ve parola: `notification`
 
-Bu aşamada uygulama içi event kullanılmaktadır. Kalıcı mesaj kuyruğu entegrasyonu sonraki görevde eklenecektir.
+RabbitMQ'yu başlatmak için:
+
+```powershell
+docker compose up -d rabbitmq
+docker compose ps
+```
+
+Consumer mesajı aldıktan sonra uygun EMAIL, SMS, PUSH veya LOG göndericisini çalıştırır. Başarılı gönderimde durum `SENT`, hata durumunda `FAILED` olur.
+
+Aynı mesaj tekrar teslim edilirse bildirim pessimistic veritabanı kilidiyle yüklenir. Durumu artık `PENDING` değilse ikinci gönderim yapılmaz.
+
+RabbitMQ bağlantısı şu ortam değişkenleriyle değiştirilebilir:
+
+- `RABBITMQ_HOST`
+- `RABBITMQ_PORT`
+- `RABBITMQ_USERNAME`
+- `RABBITMQ_PASSWORD`
