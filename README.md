@@ -55,7 +55,7 @@ Content-Type: application/json
 
 ```json
 {
-  "channel": "EMAIL",
+  "channel": "LOG",
   "subject": "Test bildirimi",
   "content": "Merhaba, bu bir test bildirimidir.",
   "recipient": {
@@ -64,7 +64,7 @@ Content-Type: application/json
 }
 ```
 
-Başarılı oluşturma `201 Created` döner. Yeni bildirimin başlangıç durumu `PENDING` olur.
+Başarılı oluşturma `201 Created` döner. Bildirim önce `PENDING` oluşturulur; sender başarıyla çalışınca `SENT` durumuna geçer.
 
 Örnek yanıt:
 
@@ -77,8 +77,8 @@ Başarılı oluşturma `201 Created` döner. Yeni bildirimin başlangıç durumu
     "phoneNumber": null,
     "deviceToken": null
   },
-  "channel": "EMAIL",
-  "status": "PENDING",
+  "channel": "LOG",
+  "status": "SENT",
   "subject": "Test bildirimi",
   "content": "Merhaba, bu bir test bildirimidir.",
   "createdAt": "2026-09-02T20:40:01",
@@ -106,3 +106,11 @@ Kayıt bulunursa `200 OK`, bulunamazsa `404 Not Found` döner.
 
 - Geçersiz istek: `400 Bad Request`
 - Bulunamayan bildirim: `404 Not Found`
+
+## Kanal gönderim mimarisi
+
+Gönderim akışı `NotificationService` → `NotificationDispatchService` → `NotificationChannelRegistry` → `NotificationChannelSender` şeklindedir.
+
+Her kanal, `NotificationChannelSender` arayüzünün ayrı bir implementasyonudur. Registry, Spring tarafından bulunan sender’ları kanal değerine göre bir haritada tutar. Böylece yeni bir kanal eklemek mevcut gönderim akışını değiştirmeyi gerektirmez.
+
+Şu anda `LOG` kanalı geliştirme ve uçtan uca doğrulama amacıyla gönderimi uygulama loguna yazar. E-posta, SMS ve push sender’ları sonraki görevlerde eklenecektir.

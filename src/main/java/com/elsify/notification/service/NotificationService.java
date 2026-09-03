@@ -23,6 +23,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final RecipientRepository recipientRepository;
     private final NotificationMapper notificationMapper;
+    private final NotificationDispatchService notificationDispatchService;
 
     @Transactional
     public NotificationResponse create(CreateNotificationRequest request) {
@@ -33,6 +34,8 @@ public class NotificationService {
 
         var notification = notificationMapper.toNotification(request, recipient);
         notificationRepository.save(notification);
+
+        notificationDispatchService.dispatch(notification);
 
         return notificationMapper.toResponse(notification);
     }
@@ -56,6 +59,7 @@ public class NotificationService {
             case EMAIL -> StringUtils.hasText(request.recipient().email());
             case SMS -> StringUtils.hasText(request.recipient().phoneNumber());
             case PUSH -> StringUtils.hasText(request.recipient().deviceToken());
+            case LOG -> true;
         };
 
         if (!targetExists) {
