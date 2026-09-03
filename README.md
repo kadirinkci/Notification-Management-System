@@ -65,7 +65,7 @@ Content-Type: application/json
 }
 ```
 
-Başarılı oluşturma `201 Created` döner. Bildirim önce `PENDING` oluşturulur; sender başarıyla çalışınca `SENT` durumuna geçer.
+Başarılı oluşturma `201 Created` döner. Yanıttaki ilk durum `PENDING` olur; gönderim transaction tamamlandıktan sonra arka planda işlenir ve durum `SENT` veya `FAILED` olarak güncellenir.
 
 Örnek yanıt:
 
@@ -79,7 +79,7 @@ Başarılı oluşturma `201 Created` döner. Bildirim önce `PENDING` oluşturul
     "deviceToken": null
   },
   "channel": "EMAIL",
-  "status": "SENT",
+  "status": "PENDING",
   "subject": "Test bildirimi",
   "content": "Merhaba, bu bir test bildirimidir.",
   "createdAt": "2026-09-02T20:40:01",
@@ -159,7 +159,7 @@ Geçerli token ile örnek istek:
 }
 ```
 
-Geçerli token ile bildirim `SENT` durumuna geçer. Boş veya 10 karakterden kısa token gönderildiğinde bildirim oluşturulur ancak durumu `FAILED` olur. Loglarda token’ın yalnızca son dört karakteri görünür.
+Push bildirimi ilk olarak `PENDING` durumunda oluşturulur. Geçerli token ile arka plan gönderimi tamamlandığında durum `SENT` olur. Boş veya 10 karakterden kısa token gönderildiğinde durum `FAILED` olarak güncellenir. Loglarda token’ın yalnızca son dört karakteri görünür.
 
 ## Şablon yönetimi
 
@@ -204,6 +204,23 @@ Content-Type: application/json
 }
 ```
 
-Şablonun kanalı, konusu ve gövdesi kullanılarak mevcut bildirim gönderim akışı çalıştırılır. Başarılı gönderim `201 Created` döner.
+Şablonun kanalı, konusu ve gövdesi kullanılarak mevcut bildirim gönderim akışı çalıştırılır. İstek `201 Created` ve ilk durum olarak `PENDING` döner; gönderim sonucu daha sonra güncellenir.
 
 Eksik veya şablonda bulunmayan fazladan değişken gönderilirse `400 Bad Request` döner. Yanıttaki `missingVariables` ve `unexpectedVariables` alanları hatalı değişkenleri gösterir.
+
+## Asenkron bildirim işleme
+
+Bildirim oluşturma isteği, gönderimin tamamlanmasını beklemez. Kayıt `PENDING` durumunda oluşturulur ve transaction başarıyla tamamlandıktan sonra bir uygulama olayı yayınlanır.
+
+Olay, `NotificationAsyncProcessor` tarafından özel `notificationTaskExecutor` thread pool’u üzerinde işlenir:
+
+- Core thread sayısı: `2`
+- Maksimum thread sayısı: `4`
+- Kuyruk kapasitesi: `100`
+- Thread adı öneki: `notification-`
+
+Gönderim başarılı olduğunda durum `SENT`, hata oluştuğunda `FAILED` olur. Güncel durum aşağıdaki endpoint ile sorgulanabilir:
+
+`GET /api/notifications/{id}`
+
+Bu aşamada uygulama içi event kullanılmaktadır. Kalıcı mesaj kuyruğu entegrasyonu sonraki görevde eklenecektir.
