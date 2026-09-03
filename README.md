@@ -35,7 +35,7 @@ Invoke-RestMethod http://localhost:8080/actuator/health
 
 Beklenen durum: `UP`.
 
-Flyway başlangıç sırasında `recipient`, `notification` ve `flyway_schema_history` tablolarını oluşturur.
+Flyway başlangıç sırasında `recipient`, `notification`, `notification_template` ve `flyway_schema_history` tablolarını oluşturur.
 
 ## Test
 
@@ -160,3 +160,50 @@ Geçerli token ile örnek istek:
 ```
 
 Geçerli token ile bildirim `SENT` durumuna geçer. Boş veya 10 karakterden kısa token gönderildiğinde bildirim oluşturulur ancak durumu `FAILED` olur. Loglarda token’ın yalnızca son dört karakteri görünür.
+
+## Şablon yönetimi
+
+Bildirim şablonları veritabanında saklanır. Şablon kodları kaydedilirken büyük harfe dönüştürülür ve benzersiz olmalıdır.
+
+CRUD endpoint’leri:
+
+- `POST /api/templates` — şablon oluşturur
+- `GET /api/templates` — şablonları sayfalı listeler
+- `GET /api/templates/{id}` — şablon detayını getirir
+- `PUT /api/templates/{id}` — şablonu günceller
+- `DELETE /api/templates/{id}` — şablonu siler
+
+Örnek şablon:
+
+```json
+{
+  "code": "WELCOME_EMAIL",
+  "channel": "EMAIL",
+  "subject": "Hoş geldin, {{name}}!",
+  "body": "Merhaba {{name}}, doğrulama kodun {{verificationCode}}."
+}
+```
+
+Şablondan bildirim oluşturmak için:
+
+```http
+POST /api/notifications/from-template
+Content-Type: application/json
+```
+
+```json
+{
+  "templateCode": "WELCOME_EMAIL",
+  "variables": {
+    "name": "Abdulkadir",
+    "verificationCode": "123456"
+  },
+  "recipient": {
+    "email": "template-test@example.com"
+  }
+}
+```
+
+Şablonun kanalı, konusu ve gövdesi kullanılarak mevcut bildirim gönderim akışı çalıştırılır. Başarılı gönderim `201 Created` döner.
+
+Eksik veya şablonda bulunmayan fazladan değişken gönderilirse `400 Bad Request` döner. Yanıttaki `missingVariables` ve `unexpectedVariables` alanları hatalı değişkenleri gösterir.
