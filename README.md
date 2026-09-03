@@ -7,6 +7,7 @@ E-posta, SMS ve push kanallarını destekleyecek bildirim yönetim sistemi.
 - Java 21
 - PostgreSQL
 - Maven Wrapper
+- MailHog (lokal e-posta testi)
 
 ## Veritabanı
 
@@ -55,7 +56,7 @@ Content-Type: application/json
 
 ```json
 {
-  "channel": "LOG",
+  "channel": "EMAIL",
   "subject": "Test bildirimi",
   "content": "Merhaba, bu bir test bildirimidir.",
   "recipient": {
@@ -77,7 +78,7 @@ Başarılı oluşturma `201 Created` döner. Bildirim önce `PENDING` oluşturul
     "phoneNumber": null,
     "deviceToken": null
   },
-  "channel": "LOG",
+  "channel": "EMAIL",
   "status": "SENT",
   "subject": "Test bildirimi",
   "content": "Merhaba, bu bir test bildirimidir.",
@@ -113,4 +114,16 @@ Gönderim akışı `NotificationService` → `NotificationDispatchService` → `
 
 Her kanal, `NotificationChannelSender` arayüzünün ayrı bir implementasyonudur. Registry, Spring tarafından bulunan sender’ları kanal değerine göre bir haritada tutar. Böylece yeni bir kanal eklemek mevcut gönderim akışını değiştirmeyi gerektirmez.
 
-Şu anda `LOG` kanalı geliştirme ve uçtan uca doğrulama amacıyla gönderimi uygulama loguna yazar. E-posta, SMS ve push sender’ları sonraki görevlerde eklenecektir.
+`LOG` kanalı geliştirme amaçlı simülasyon yapar. `EMAIL` kanalı `JavaMailSender` üzerinden SMTP ile HTML e-posta gönderir. SMS ve push sender’ları sonraki görevlerde eklenecektir.
+
+## MailHog ile lokal e-posta testi
+
+MailHog SMTP mesajlarını gerçek kullanıcılara göndermeden yakalamak için kullanılır.
+
+- SMTP adresi: `localhost:1025`
+- Web arayüzü: `http://localhost:8025`
+- Varsayılan gönderen: `no-reply@elsify.local`
+
+Önce MailHog çalıştırılır, ardından uygulama başlatılır. `EMAIL` kanalıyla gönderilen bildirim MailHog web arayüzünde görüntülenebilir. E-posta gövdesi HTML içeriğini destekler.
+
+SMTP bağlantı bilgileri `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` ve `MAIL_FROM` ortam değişkenleriyle değiştirilebilir.
