@@ -58,7 +58,7 @@ public class NotificationService {
         boolean targetExists = switch (request.channel()) {
             case EMAIL -> StringUtils.hasText(request.recipient().email());
             case SMS -> StringUtils.hasText(request.recipient().phoneNumber());
-            case PUSH -> StringUtils.hasText(request.recipient().deviceToken());
+            case PUSH -> true;
             case LOG -> true;
         };
 

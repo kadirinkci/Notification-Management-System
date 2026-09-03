@@ -114,7 +114,7 @@ Gönderim akışı `NotificationService` → `NotificationDispatchService` → `
 
 Her kanal, `NotificationChannelSender` arayüzünün ayrı bir implementasyonudur. Registry, Spring tarafından bulunan sender’ları kanal değerine göre bir haritada tutar. Böylece yeni bir kanal eklemek mevcut gönderim akışını değiştirmeyi gerektirmez.
 
-`LOG` kanalı geliştirme amaçlı simülasyon yapar. `EMAIL` kanalı SMTP üzerinden HTML e-posta gönderir. `SMS` kanalı, config ile seçilen bir `SmsProvider` kullanır; şu anda lokal geliştirme için `MockSmsProvider` etkindir. Push sender sonraki görevde eklenecektir.
+`LOG` kanalı geliştirme amaçlı simülasyon yapar. `EMAIL` kanalı SMTP üzerinden HTML e-posta gönderir. `SMS` kanalı, config ile seçilen bir `SmsProvider` kullanır; lokal geliştirme için `MockSmsProvider` etkindir. `PUSH` kanalı da seçilen bir `PushProvider` kullanır; lokal geliştirmede `MockFcmPushProvider` etkindir.
 
 ## MailHog ile lokal e-posta testi
 
@@ -137,3 +137,26 @@ Sağlayıcı aşağıdaki ortam değişkeniyle seçilebilir:
 - `SMS_PROVIDER` — varsayılan değer: `mock`
 
 Mock loglarında telefon numarası maskelenir ve yalnızca son dört hanesi gösterilir. Mesaj segmenti standart metin için yaklaşık 160, Unicode metin için yaklaşık 70 karakter üzerinden hesaplanır. Gerçek NetGSM veya Twilio entegrasyonu yeni bir `SmsProvider` implementasyonu eklenerek yapılabilir.
+
+## Mock Push testi
+
+Push gönderimi `PushSender` üzerinden seçili `PushProvider` implementasyonuna aktarılır. Varsayılan sağlayıcı `MockFcmPushProvider` olup gerçek bir bildirim göndermeden gönderimi uygulama loguna yazar.
+
+Sağlayıcı aşağıdaki ortam değişkeniyle seçilebilir:
+
+- `PUSH_PROVIDER` — varsayılan değer: `mock`
+
+Geçerli token ile örnek istek:
+
+```json
+{
+  "channel": "PUSH",
+  "subject": "Push test bildirimi",
+  "content": "Mock FCM ile gönderilen test bildirimi.",
+  "recipient": {
+    "deviceToken": "test-device-token-123456"
+  }
+}
+```
+
+Geçerli token ile bildirim `SENT` durumuna geçer. Boş veya 10 karakterden kısa token gönderildiğinde bildirim oluşturulur ancak durumu `FAILED` olur. Loglarda token’ın yalnızca son dört karakteri görünür.
