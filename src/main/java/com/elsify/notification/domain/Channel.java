@@ -1,5 +1,8 @@
 package com.elsify.notification.domain;
 
 public enum Channel {
-    EMAIL, SMS, PUSH
+    EMAIL,
+    SMS,
+    PUSH,
+    LOG
 }
