@@ -34,6 +34,8 @@ app:
     from: ${MAIL_FROM:no-reply@elsify.local}
   sms:
     provider: ${SMS_PROVIDER:mock}
+  push:
+    provider: ${PUSH_PROVIDER:mock}
 
 logging:
   level:
