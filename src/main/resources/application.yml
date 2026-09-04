@@ -37,6 +37,7 @@ spring:
 
     listener:
       simple:
+        prefetch: 1
         default-requeue-rejected: false
         retry:
           enabled: true
@@ -54,6 +55,24 @@ app:
     mock-transient-failures: ${SMS_MOCK_TRANSIENT_FAILURES:0}
   push:
     provider: ${PUSH_PROVIDER:mock}
+  rate-limit:
+    channels:
+      EMAIL:
+        capacity: ${RATE_LIMIT_EMAIL_CAPACITY:60}
+        refill-tokens: ${RATE_LIMIT_EMAIL_REFILL_TOKENS:60}
+        refill-period: ${RATE_LIMIT_EMAIL_REFILL_PERIOD:1m}
+      SMS:
+        capacity: ${RATE_LIMIT_SMS_CAPACITY:10}
+        refill-tokens: ${RATE_LIMIT_SMS_REFILL_TOKENS:10}
+        refill-period: ${RATE_LIMIT_SMS_REFILL_PERIOD:1m}
+      PUSH:
+        capacity: ${RATE_LIMIT_PUSH_CAPACITY:120}
+        refill-tokens: ${RATE_LIMIT_PUSH_REFILL_TOKENS:120}
+        refill-period: ${RATE_LIMIT_PUSH_REFILL_PERIOD:1m}
+      LOG:
+        capacity: ${RATE_LIMIT_LOG_CAPACITY:1000}
+        refill-tokens: ${RATE_LIMIT_LOG_REFILL_TOKENS:1000}
+        refill-period: ${RATE_LIMIT_LOG_REFILL_PERIOD:1m}
 
 logging:
   level:

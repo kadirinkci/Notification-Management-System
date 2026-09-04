@@ -294,3 +294,45 @@ ORDER BY notification_id, attempt_number;
 ```
 
 Lokal ortamda mock SMS sağlayıcısının geçici hata üretmesi için `SMS_MOCK_TRANSIENT_FAILURES` ortam değişkeni kullanılabilir. Varsayılan değer `0` olup normal mock gönderimini etkilemez.
+
+## Kanal bazlı rate limiting
+
+Bildirim gönderim hızı Bucket4j token-bucket modeliyle kanal bazında sınırlandırılır. Her kanal bağımsız kapasiteye ve yenilenme hızına sahiptir.
+
+Varsayılan limitler:
+
+| Kanal | Kapasite | Yenilenme |
+|---|---:|---:|
+| EMAIL | 60 | Dakikada 60 token |
+| SMS | 10 | Dakikada 10 token |
+| PUSH | 120 | Dakikada 120 token |
+| LOG | 1000 | Dakikada 1000 token |
+
+Limit aşıldığında RabbitMQ mesajı hata olarak değerlendirilmez. Consumer yeni token oluşana kadar bekler; mesaj bu sırada `Unacked` durumunda tutulur. Böylece mevcut retry mekanizması çalışmaz, bildirim yanlışlıkla `FAILED` yapılmaz ve DLQ'ya gönderilmez.
+
+Limitler aşağıdaki ortam değişkenleriyle değiştirilebilir:
+
+- `RATE_LIMIT_EMAIL_CAPACITY`
+- `RATE_LIMIT_EMAIL_REFILL_TOKENS`
+- `RATE_LIMIT_EMAIL_REFILL_PERIOD`
+- `RATE_LIMIT_SMS_CAPACITY`
+- `RATE_LIMIT_SMS_REFILL_TOKENS`
+- `RATE_LIMIT_SMS_REFILL_PERIOD`
+- `RATE_LIMIT_PUSH_CAPACITY`
+- `RATE_LIMIT_PUSH_REFILL_TOKENS`
+- `RATE_LIMIT_PUSH_REFILL_PERIOD`
+- `RATE_LIMIT_LOG_CAPACITY`
+- `RATE_LIMIT_LOG_REFILL_TOKENS`
+- `RATE_LIMIT_LOG_REFILL_PERIOD`
+
+Örnek kısa SMS testi:
+
+```powershell
+$env:RATE_LIMIT_SMS_CAPACITY="2"
+$env:RATE_LIMIT_SMS_REFILL_TOKENS="1"
+$env:RATE_LIMIT_SMS_REFILL_PERIOD="5s"
+.\mvnw.cmd spring-boot:run
+```
+Bu ayarda ilk iki SMS hemen gönderilebilir. Sonraki SMS bildirimleri her beş saniyede bir gönderilir.
+
+Rate limiter şu anda uygulama belleğinde tutulur. Uygulama yeniden başlatıldığında token durumu sıfırlanır ve birden fazla uygulama instance'ında her instance kendi limitini uygular.
