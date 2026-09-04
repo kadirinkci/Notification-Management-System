@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${'Bildirim #' + notification.id + ' | Yönetim Paneli'}">
+        Bildirim Detayı
+    </title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="shell topbar__content">
+            <a class="brand" th:href="@{/admin/notifications}">
+                Notification Management
+            </a>
+            <span class="topbar__label">Yönetim Paneli</span>
+        </div>
+    </header>
+
+    <main class="shell page">
+        <a class="back-link" th:href="@{/admin/notifications}">
+            ← Bildirim listesine dön
+        </a>
+
+        <article class="panel detail-card">
+            <header class="detail-card__header">
+                <h1 th:text="${'Bildirim #' + notification.id}">
+                    Bildirim #1
+                </h1>
+
+                <span class="status-badge" th:classappend="${'status-badge--' + notification.status.name()}"
+                    th:text="${notification.status}">
+                    SENT
+                </span>
+            </header>
+
+            <dl class="detail-grid">
+                <div class="detail-field">
+                    <dt class="detail-label">Kanal</dt>
+                    <dd class="detail-value">
+                        <span class="badge" th:classappend="${'badge--' + notification.channel.name()}"
+                            th:text="${notification.channel}">
+                            EMAIL
+                        </span>
+                    </dd>
+                </div>
+
+                <div class="detail-field">
+                    <dt class="detail-label">Durum</dt>
+                    <dd class="detail-value" th:text="${notification.status}">
+                        SENT
+                    </dd>
+                </div>
+
+                <div class="detail-field">
+                    <dt class="detail-label">Oluşturulma zamanı</dt>
+                    <dd class="detail-value">
+                        <time th:datetime="${notification.createdAt}"
+                            th:text="${dateTimeFormatter.format(notification.createdAt)}">
+                            04.09.2026 18:30
+                        </time>
+                    </dd>
+                </div>
+
+                <div class="detail-field">
+                    <dt class="detail-label">Güncellenme zamanı</dt>
+                    <dd class="detail-value">
+                        <time th:datetime="${notification.updatedAt}"
+                            th:text="${dateTimeFormatter.format(notification.updatedAt)}">
+                            04.09.2026 18:31
+                        </time>
+                    </dd>
+                </div>
+
+                <div class="detail-field">
+                    <dt class="detail-label">E-posta</dt>
+                    <dd class="detail-value" th:text="${notification.recipient.email != null
+                        ? notification.recipient.email
+                        : '—'}">
+                        test@example.com
+                    </dd>
+                </div>
+
+                <div class="detail-field">
+                    <dt class="detail-label">Telefon</dt>
+                    <dd class="detail-value" th:text="${notification.recipient.phoneNumber != null
+                        ? notification.recipient.phoneNumber
+                        : '—'}">
+                        +905551234567
+                    </dd>
+                </div>
+
+                <div class="detail-field detail-field--full">
+                    <dt class="detail-label">Cihaz tokenı</dt>
+                    <dd class="detail-value" th:text="${notification.recipient.deviceToken != null
+                        ? notification.recipient.deviceToken
+                        : '—'}">
+                        device-token
+                    </dd>
+                </div>
+
+                <div class="detail-field detail-field--full">
+                    <dt class="detail-label">Konu</dt>
+                    <dd class="detail-value" th:text="${notification.subject != null
+                        ? notification.subject
+                        : 'Konu yok'}">
+                        Bildirim konusu
+                    </dd>
+                </div>
+
+                <div class="detail-field detail-field--full">
+                    <dt class="detail-label">İçerik</dt>
+                    <dd class="detail-value message-content" th:text="${notification.content}">
+                        Bildirim içeriği
+                    </dd>
+                </div>
+            </dl>
+        </article>
+    </main>
+</body>
+
+</html>

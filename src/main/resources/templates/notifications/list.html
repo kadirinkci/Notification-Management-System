@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bildirimler | Yönetim Paneli</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="shell topbar__content">
+            <a class="brand" th:href="@{/admin/notifications}">
+                Notification Management
+            </a>
+            <span class="topbar__label">Yönetim Paneli</span>
+        </div>
+    </header>
+
+    <main class="shell page">
+        <section class="page-heading">
+            <div>
+                <p class="eyebrow">BİLDİRİM YÖNETİMİ</p>
+                <h1>Bildirimler</h1>
+                <p class="page-description">
+                    Gönderim durumlarını takip edin ve bildirim ayrıntılarını inceleyin.
+                </p>
+            </div>
+
+            <div class="record-count">
+                <strong th:text="${notifications.totalElements}">0</strong>
+                <span>toplam kayıt</span>
+            </div>
+        </section>
+
+        <section class="panel filter-panel">
+            <form method="get" th:action="@{/admin/notifications}" class="filter-form">
+
+                <label class="field">
+                    <span>Kanal</span>
+                    <select name="channel">
+                        <option value="">Tüm kanallar</option>
+                        <option th:each="channelOption : ${channels}" th:value="${channelOption}"
+                            th:text="${channelOption}" th:selected="${channelOption == selectedChannel}">
+                            EMAIL
+                        </option>
+                    </select>
+                </label>
+
+                <label class="field">
+                    <span>Durum</span>
+                    <select name="status">
+                        <option value="">Tüm durumlar</option>
+                        <option th:each="statusOption : ${statuses}" th:value="${statusOption}"
+                            th:text="${statusOption}" th:selected="${statusOption == selectedStatus}">
+                            SENT
+                        </option>
+                    </select>
+                </label>
+
+                <label class="field">
+                    <span>Başlangıç tarihi</span>
+                    <input type="date" name="createdFrom" th:value="${createdFrom}">
+                </label>
+
+                <label class="field">
+                    <span>Bitiş tarihi</span>
+                    <input type="date" name="createdTo" th:value="${createdTo}">
+                </label>
+
+                <div class="filter-actions">
+                    <button class="button button--primary" type="submit">
+                        Filtrele
+                    </button>
+                    <a class="button button--secondary" th:href="@{/admin/notifications}">
+                        Temizle
+                    </a>
+                </div>
+            </form>
+        </section>
+
+        <section class="panel results-panel">
+            <div class="empty-state" th:if="${notifications.empty}">
+                <h2>Bildirim bulunamadı</h2>
+                <p>Seçilen filtrelerle eşleşen bir bildirim kaydı yok.</p>
+                <a class="button button--secondary" th:href="@{/admin/notifications}">
+                    Filtreleri temizle
+                </a>
+            </div>
+
+            <div class="table-wrapper" th:unless="${notifications.empty}">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Kanal</th>
+                            <th>Alıcı</th>
+                            <th>Konu</th>
+                            <th>Durum</th>
+                            <th>Oluşturulma</th>
+                            <th>
+                                <span class="visually-hidden">İşlem</span>
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr th:each="notification : ${notifications.content}">
+                            <td class="id-cell" th:text="${'#' + notification.id}">
+                                #1
+                            </td>
+
+                            <td>
+                                <span class="badge" th:classappend="${'badge--' + notification.channel.name()}"
+                                    th:text="${notification.channel}">
+                                    EMAIL
+                                </span>
+                            </td>
+
+                            <td class="recipient-cell">
+                                <span th:if="${notification.recipient.email != null}"
+                                    th:text="${notification.recipient.email}">
+                                    test@example.com
+                                </span>
+
+                                <span th:if="${notification.recipient.email == null
+                                      and notification.recipient.phoneNumber != null}"
+                                    th:text="${notification.recipient.phoneNumber}">
+                                    +905551234567
+                                </span>
+
+                                <span th:if="${notification.recipient.email == null
+                                      and notification.recipient.phoneNumber == null
+                                      and notification.recipient.deviceToken != null}"
+                                    th:text="${notification.recipient.deviceToken}">
+                                    device-token
+                                </span>
+
+                                <span th:if="${notification.recipient.email == null
+                                      and notification.recipient.phoneNumber == null
+                                      and notification.recipient.deviceToken == null}">
+                                    —
+                                </span>
+                            </td>
+
+                            <td class="subject-cell">
+                                <span th:if="${notification.subject != null}" th:text="${notification.subject}">
+                                    Bildirim konusu
+                                </span>
+                                <span class="muted" th:unless="${notification.subject != null}">
+                                    Konu yok
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="status-badge"
+                                    th:classappend="${'status-badge--' + notification.status.name()}"
+                                    th:text="${notification.status}">
+                                    SENT
+                                </span>
+                            </td>
+
+                            <td class="date-cell">
+                                <time th:datetime="${notification.createdAt}"
+                                    th:text="${dateTimeFormatter.format(notification.createdAt)}">
+                                    04.09.2026 18:30
+                                </time>
+                            </td>
+
+                            <td class="action-cell">
+                                <a class="detail-link" th:href="@{/admin/notifications/{id}(id=${notification.id})}">
+                                    Detay
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <nav class="pagination" aria-label="Bildirim sayfaları" th:if="${notifications.totalPages > 1}">
+
+                <a class="pagination__button" th:if="${notifications.hasPrevious()}" th:href="@{/admin/notifications(
+                    page=${notifications.number - 1},
+                    channel=${selectedChannel},
+                    status=${selectedStatus},
+                    createdFrom=${createdFrom},
+                    createdTo=${createdTo}
+               )}">
+                    Önceki
+                </a>
+
+                <span class="pagination__button is-disabled" th:unless="${notifications.hasPrevious()}">
+                    Önceki
+                </span>
+
+                <span class="pagination__summary">
+                    Sayfa
+                    <strong th:text="${notifications.number + 1}">1</strong>
+                    /
+                    <span th:text="${notifications.totalPages}">1</span>
+                </span>
+
+                <a class="pagination__button" th:if="${notifications.hasNext()}" th:href="@{/admin/notifications(
+                    page=${notifications.number + 1},
+                    channel=${selectedChannel},
+                    status=${selectedStatus},
+                    createdFrom=${createdFrom},
+                    createdTo=${createdTo}
+               )}">
+                    Sonraki
+                </a>
+
+                <span class="pagination__button is-disabled" th:unless="${notifications.hasNext()}">
+                    Sonraki
+                </span>
+            </nav>
+        </section>
+    </main>
+</body>
+
+</html>
