@@ -1,9 +1,12 @@
 package com.elsify.notification.messaging;
 
 import com.elsify.notification.config.RabbitMqConfig;
+import com.elsify.notification.domain.Channel;
 import com.elsify.notification.domain.DeliveryAttemptOutcome;
 import com.elsify.notification.exception.PermanentNotificationException;
 import com.elsify.notification.exception.TransientNotificationException;
+import com.elsify.notification.ratelimit.ChannelRateLimiter;
+import com.elsify.notification.service.NotificationChannelResolver;
 import com.elsify.notification.service.NotificationDeliveryAttemptService;
 import com.elsify.notification.service.NotificationMessageProcessor;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +19,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class NotificationMessageConsumer {
 
+    private final NotificationChannelResolver channelResolver;
+    private final ChannelRateLimiter channelRateLimiter;
     private final NotificationMessageProcessor messageProcessor;
     private final NotificationDeliveryAttemptService attemptService;
 
@@ -31,6 +36,11 @@ public class NotificationMessageConsumer {
         );
 
         try {
+            Channel channel =
+                    channelResolver.resolve(notificationId);
+
+            channelRateLimiter.acquire(channel);
+
             boolean processed =
                     messageProcessor.process(notificationId);
 
