@@ -1,16 +1,25 @@
 package com.elsify.notification.controller;
 
-import com.elsify.notification.dto.CreateNotificationFromTemplateRequest;
-import com.elsify.notification.dto.CreateNotificationRequest;
-import com.elsify.notification.dto.NotificationResponse;
-import com.elsify.notification.service.NotificationService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.elsify.notification.dto.CreateNotificationFromTemplateRequest;
+import com.elsify.notification.dto.CreateNotificationRequest;
+import com.elsify.notification.dto.NotificationResponse;
+import com.elsify.notification.service.NotificationService;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/notifications")
@@ -40,7 +49,7 @@ public class NotificationController {
     }
 
     @GetMapping("/{id}")
-    public NotificationResponse findById(@PathVariable Long id) {
+    public NotificationResponse findById(@PathVariable @Positive Long id) {
         return notificationService.findById(id);
     }
 }

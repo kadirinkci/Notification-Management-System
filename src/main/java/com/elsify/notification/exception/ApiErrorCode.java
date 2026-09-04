@@ -1,0 +1,12 @@
+package com.elsify.notification.exception;
+
+public enum ApiErrorCode {
+
+    INVALID_REQUEST,
+    VALIDATION_ERROR,
+    MALFORMED_REQUEST,
+    RESOURCE_NOT_FOUND,
+    RESOURCE_CONFLICT,
+    TEMPLATE_VARIABLE_MISMATCH,
+    INTERNAL_SERVER_ERROR
+}

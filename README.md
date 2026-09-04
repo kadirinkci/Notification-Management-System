@@ -336,3 +336,73 @@ $env:RATE_LIMIT_SMS_REFILL_PERIOD="5s"
 Bu ayarda ilk iki SMS hemen gönderilebilir. Sonraki SMS bildirimleri her beş saniyede bir gönderilir.
 
 Rate limiter şu anda uygulama belleğinde tutulur. Uygulama yeniden başlatıldığında token durumu sıfırlanır ve birden fazla uygulama instance'ında her instance kendi limitini uygular.
+
+## API hata yanıtları
+
+API hataları RFC 7807 Problem Details formatında ve `application/problem+json` içerik tipiyle döner.
+
+Standart hata alanları:
+
+| Alan | Açıklama |
+|---|---|
+| `type` | Uygulamaya özgü hata türü URI'si |
+| `title` | Hatanın kısa başlığı |
+| `status` | HTTP durum kodu |
+| `detail` | Okunabilir hata açıklaması |
+| `instance` | Hatanın oluştuğu istek yolu |
+| `errorCode` | İstemcinin kullanabileceği uygulama hata kodu |
+| `correlationId` | İstek ile sunucu loglarını eşleştiren kimlik |
+| `timestamp` | Hatanın oluşma zamanı |
+
+Desteklenen hata kodları:
+
+- `INVALID_REQUEST`
+- `VALIDATION_ERROR`
+- `MALFORMED_REQUEST`
+- `RESOURCE_NOT_FOUND`
+- `RESOURCE_CONFLICT`
+- `TEMPLATE_VARIABLE_MISMATCH`
+- `INTERNAL_SERVER_ERROR`
+
+İstemci isteğe `X-Correlation-Id` header'ı ekleyebilir. Değer geçerliyse aynı kimlik response header'ında ve hata gövdesinde döndürülür. Header gönderilmezse uygulama otomatik UUID üretir.
+
+Örnek geçersiz istek:
+
+```http
+POST /api/notifications
+Content-Type: application/json
+X-Correlation-Id: gun13-validation-001
+```
+
+```json
+{
+  "channel": null,
+  "content": "",
+  "recipient": {
+    "email": "gecersiz-email"
+  }
+}
+```
+
+Örnek hata yanıtı:
+
+```json
+{
+  "type": "urn:problem:validation-error",
+  "title": "Request validation failed",
+  "status": 400,
+  "detail": "One or more request fields are invalid.",
+  "instance": "/api/notifications",
+  "errorCode": "VALIDATION_ERROR",
+  "correlationId": "gun13-validation-001",
+  "timestamp": "2026-09-04T18:30:00Z",
+  "violations": [
+    {
+      "field": "channel",
+      "message": "must not be null"
+    }
+  ]
+}
+```
+
+Beklenmeyen hatalarda istemciye dahili exception ayrıntısı verilmez. API güvenli bir `500 INTERNAL_SERVER_ERROR` yanıtı döndürür; ayrıntılı stack trace ve korelasyon kimliği sunucu loguna yazılır.

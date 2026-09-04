@@ -4,6 +4,7 @@ import com.elsify.notification.dto.NotificationTemplateResponse;
 import com.elsify.notification.dto.SaveNotificationTemplateRequest;
 import com.elsify.notification.service.NotificationTemplateService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,13 +36,15 @@ public class NotificationTemplateController {
     }
 
     @GetMapping("/{id}")
-    public NotificationTemplateResponse findById(@PathVariable Long id) {
+    public NotificationTemplateResponse findById(
+            @PathVariable @Positive Long id
+    ) {
         return templateService.findById(id);
     }
 
     @PutMapping("/{id}")
     public NotificationTemplateResponse update(
-            @PathVariable Long id,
+            @PathVariable @Positive Long id,
             @Valid @RequestBody SaveNotificationTemplateRequest request
     ) {
         return templateService.update(id, request);
@@ -49,7 +52,7 @@ public class NotificationTemplateController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
+    public void delete(@PathVariable @Positive Long id) {
         templateService.delete(id);
     }
 }
