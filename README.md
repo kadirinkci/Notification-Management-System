@@ -406,3 +406,42 @@ X-Correlation-Id: gun13-validation-001
 ```
 
 Beklenmeyen hatalarda istemciye dahili exception ayrıntısı verilmez. API güvenli bir `500 INTERNAL_SERVER_ERROR` yanıtı döndürür; ayrıntılı stack trace ve korelasyon kimliği sunucu loguna yazılır.
+
+## Bildirim yönetim arayüzü
+
+Sunucu tarafında Thymeleaf ile oluşturulan yönetim ekranına aşağıdaki adresten erişilebilir:
+
+```text
+http://localhost:8080/admin/notifications
+```
+
+Arayüz özellikleri:
+
+- Sayfalı bildirim listesi
+- Kanal filtresi
+- Durum filtresi
+- Başlangıç ve bitiş tarihi filtresi
+- Bildirim detay ekranı
+- Kanal ve durum rozetleri
+- Mobil ekranlara uyumlu yerleşim
+- Yeni bildirimlerin önce gösterilmesi
+
+Durum renkleri:
+
+- `SENT`: yeşil
+- `FAILED`: kırmızı
+- `PENDING`: sarı
+
+Örnek filtreli adres:
+
+```text
+http://localhost:8080/admin/notifications?channel=SMS&status=SENT&createdFrom=2026-09-01&createdTo=2026-09-04
+```
+
+Liste ekranındaki **Detay** bağlantısı bildirim bilgilerini aşağıdaki URL yapısında açar:
+
+```text
+http://localhost:8080/admin/notifications/{id}
+```
+
+Arayüz aynı Spring Boot uygulaması içinde çalıştığı için ayrı bir frontend sunucusu veya CORS yapılandırması gerekmez.

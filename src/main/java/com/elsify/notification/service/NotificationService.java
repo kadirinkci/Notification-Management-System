@@ -1,12 +1,15 @@
 package com.elsify.notification.service;
 
+import com.elsify.notification.domain.Channel;
 import com.elsify.notification.domain.Recipient;
+import com.elsify.notification.domain.Status;
 import com.elsify.notification.dto.CreateNotificationFromTemplateRequest;
 import com.elsify.notification.dto.CreateNotificationRequest;
 import com.elsify.notification.dto.NotificationResponse;
 import com.elsify.notification.event.NotificationCreatedEvent;
 import com.elsify.notification.mapper.NotificationMapper;
 import com.elsify.notification.repository.NotificationRepository;
+import com.elsify.notification.repository.NotificationSpecifications;
 import com.elsify.notification.repository.RecipientRepository;
 import com.elsify.notification.template.RenderedTemplate;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -66,7 +71,27 @@ public class NotificationService {
     }
 
     public Page<NotificationResponse> findAll(Pageable pageable) {
-        return notificationRepository.findAll(pageable)
+        return findAll(
+                null,
+                null,
+                null,
+                null,
+                pageable);
+    }
+
+    public Page<NotificationResponse> findAll(
+            Channel channel,
+            Status status,
+            LocalDate createdFrom,
+            LocalDate createdTo,
+            Pageable pageable) {
+        return notificationRepository.findAll(
+                NotificationSpecifications.withFilters(
+                        channel,
+                        status,
+                        createdFrom,
+                        createdTo),
+                pageable)
                 .map(notificationMapper::toResponse);
     }
 
