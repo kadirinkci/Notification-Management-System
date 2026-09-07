@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>İzleme Dashboard'u | Yönetim Paneli</title>
+
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <script defer th:src="@{/js/dashboard.js}"></script>
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="shell topbar__content">
+            <a class="brand" th:href="@{/admin/dashboard}">
+                Notification Management
+            </a>
+
+            <a class="topbar__label" th:href="@{/admin/notifications}">
+                Bildirimlere dön
+            </a>
+        </div>
+    </header>
+
+    <main class="shell page">
+        <section class="page-heading">
+            <div>
+                <p class="eyebrow">CANLI İZLEME</p>
+                <h1>Bildirim Dashboard'u</h1>
+
+                <p class="page-description">
+                    Gönderim durumlarını, kanal dağılımını ve son hataları takip edin.
+                </p>
+
+                <p id="refresh-status" aria-live="polite">
+                    İstatistikler yükleniyor…
+                </p>
+
+                <p class="muted">
+                    Veriler her 15 saniyede bir otomatik yenilenir.
+                </p>
+            </div>
+
+            <div class="filter-actions">
+                <button
+                    id="refresh-button"
+                    class="button button--primary"
+                    type="button">
+                    Şimdi yenile
+                </button>
+            </div>
+        </section>
+
+        <section class="stats-grid" aria-label="Genel istatistikler">
+            <article class="panel stat-card">
+                <h2>Toplam bildirim</h2>
+                <p id="stat-total" class="stat-value">0</p>
+            </article>
+
+            <article class="panel stat-card">
+                <h2>Başarılı</h2>
+                <p id="stat-sent" class="stat-value">0</p>
+            </article>
+
+            <article class="panel stat-card">
+                <h2>Başarısız</h2>
+                <p id="stat-failed" class="stat-value">0</p>
+            </article>
+
+            <article class="panel stat-card">
+                <h2>Bekleyen</h2>
+                <p id="stat-pending" class="stat-value">0</p>
+            </article>
+
+            <article class="panel stat-card">
+                <h2>Tekrar deneniyor</h2>
+                <p id="stat-retrying" class="stat-value">0</p>
+            </article>
+
+            <article class="panel stat-card">
+                <h2>Başarı oranı</h2>
+                <p id="stat-success-rate" class="stat-value">0,0%</p>
+            </article>
+
+            <article class="panel stat-card">
+                <h2>Başarısızlık oranı</h2>
+                <p id="stat-failure-rate" class="stat-value">0,0%</p>
+            </article>
+        </section>
+
+        <section class="dashboard-section">
+            <h2>Kanal dağılımı</h2>
+
+            <p class="page-description">
+                Bildirimlerin kanallara ve gönderim durumlarına göre dağılımı.
+            </p>
+
+            <div class="panel results-panel">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Kanal</th>
+                                <th>Toplam</th>
+                                <th>Başarılı</th>
+                                <th>Başarısız</th>
+                                <th>Bekleyen</th>
+                                <th>Tekrar deneniyor</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="channel-rows">
+                            <tr>
+                                <td colspan="6" class="dashboard-empty-row">
+                                    Kanal istatistikleri yükleniyor…
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="dashboard-section">
+            <h2>Son 24 saat</h2>
+
+            <p class="page-description">
+                Saatlik bildirim hareketleri ve gönderim durumları.
+            </p>
+
+            <div class="panel results-panel">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Saat</th>
+                                <th>Toplam</th>
+                                <th>Başarılı</th>
+                                <th>Başarısız</th>
+                                <th>Bekleyen</th>
+                                <th>Tekrar deneniyor</th>
+                                <th>Yoğunluk</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="hourly-rows">
+                            <tr>
+                                <td colspan="7" class="dashboard-empty-row">
+                                    Saatlik istatistikler yükleniyor…
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="dashboard-section">
+            <h2>Son gönderim hataları</h2>
+
+            <p class="page-description">
+                En son gerçekleşen geçici ve kalıcı gönderim hataları.
+            </p>
+
+            <div class="panel results-panel">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Bildirim</th>
+                                <th>Kanal</th>
+                                <th>Deneme</th>
+                                <th>Tarih</th>
+                                <th>Hata türü</th>
+                                <th>Açıklama</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="failure-rows">
+                            <tr>
+                                <td colspan="6" class="dashboard-empty-row">
+                                    Hata kayıtları yükleniyor…
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <noscript>
+            <section class="panel dashboard-section">
+                Bu dashboard'un otomatik yenilenebilmesi için JavaScript etkin olmalıdır.
+            </section>
+        </noscript>
+    </main>
+</body>
+
+</html>

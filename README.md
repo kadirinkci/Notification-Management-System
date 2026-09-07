@@ -491,3 +491,41 @@ Formlarda tarayıcı doğrulamalarına ek olarak sunucu tarafında Bean Validati
 ```bash
 ./mvnw -Dtest=NotificationSendViewControllerTests test
 ```
+## Uygulama içi izleme dashboard'u
+
+Bildirim istatistiklerini canlı olarak takip etmek için:
+
+```text
+http://localhost:8080/admin/dashboard
+```
+
+Dashboard aşağıdaki bilgileri gösterir:
+
+- Toplam bildirim sayısı
+- Başarılı, başarısız, bekleyen ve yeniden denenen bildirim sayıları
+- Başarı ve başarısızlık oranları
+- Kanal bazında durum dağılımı
+- Son 24 saatin saatlik bildirim hareketleri
+- Son geçici ve kalıcı gönderim hataları
+
+Dashboard verileri uygulamanın kendi API'sinden alınır:
+
+```http
+GET /api/stats
+```
+
+API yanıtı şu bölümlerden oluşur:
+
+- `summary`: Genel sayaçlar ve başarı oranları
+- `channels`: EMAIL, SMS, PUSH ve LOG kanal dağılımları
+- `hourly`: Mevcut saat ile önceki 23 saatin istatistikleri
+- `recentFailures`: En son gerçekleşen 10 gönderim hatası
+- `generatedAt`: İstatistik yanıtının oluşturulma zamanı
+
+Başarı ve başarısızlık oranları yalnızca tamamlanan `SENT` ve `FAILED`
+bildirimleri üzerinden hesaplanır. `PENDING` ve `RETRYING` kayıtları oran
+hesabına dahil edilmez.
+
+Dashboard açıldığında veriler otomatik yüklenir ve her 15 saniyede bir
+yenilenir. **Şimdi yenile** düğmesiyle manuel yenileme de yapılabilir.
+Yenileme başarısız olursa son başarılı veriler ekranda korunur.
