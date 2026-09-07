@@ -553,3 +553,144 @@ select:focus-visible {
         text-align: center;
     }
 }
+#refresh-status {
+    margin: 0 0 4px;
+    color: #344054;
+    font-weight: 700;
+}
+
+.refresh-status--error {
+    color: var(--color-danger) !important;
+}
+
+.stats-grid {
+    margin-block: 24px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.stat-card {
+    padding: 20px;
+}
+
+.stat-card h2 {
+    margin-bottom: 12px;
+    color: var(--color-muted);
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+.stat-value {
+    margin: 0;
+    font-size: clamp(1.7rem, 4vw, 2.25rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+}
+
+#stat-sent,
+#stat-success-rate {
+    color: var(--color-success);
+}
+
+#stat-failed,
+#stat-failure-rate {
+    color: var(--color-danger);
+}
+
+#stat-pending {
+    color: var(--color-warning);
+}
+
+#stat-retrying {
+    color: #6938ef;
+}
+
+.dashboard-section {
+    margin-top: 36px;
+}
+
+.dashboard-section > h2 {
+    margin-bottom: 8px;
+    font-size: 1.35rem;
+}
+
+.activity-bar {
+    width: 180px;
+    height: 10px;
+    overflow: hidden;
+    background: #e7edf4;
+    border-radius: 999px;
+}
+
+.activity-bar__fill {
+    height: 100%;
+    display: block;
+    background: var(--color-primary);
+    border-radius: inherit;
+    transition: width 180ms ease;
+}
+
+.outcome-badge {
+    padding: 4px 9px;
+    display: inline-flex;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
+.outcome-badge--TRANSIENT_FAILURE {
+    background: var(--color-warning-bg);
+    color: var(--color-warning);
+}
+
+.outcome-badge--PERMANENT_FAILURE {
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+}
+
+.failure-reason {
+    max-width: 420px;
+    overflow-wrap: anywhere;
+    color: #475467;
+}
+
+.dashboard-empty-row {
+    padding: 28px 16px;
+    color: var(--color-muted);
+    text-align: center;
+}
+
+@media (max-width: 980px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 520px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .activity-bar {
+        width: 120px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .activity-bar__fill {
+        transition: none;
+    }
+}
+#refresh-button:disabled {
+    cursor: wait;
+    opacity: 0.6;
+}
+a.topbar__label {
+    color: inherit;
+    text-decoration: none;
+}
+
+a.topbar__label:hover {
+    text-decoration: underline;
+}
