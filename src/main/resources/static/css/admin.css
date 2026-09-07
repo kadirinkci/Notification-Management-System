@@ -553,3 +553,54 @@ select:focus-visible {
         text-align: center;
     }
 }
+.field > label {
+    color: #344054;
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+.field textarea {
+    width: 100%;
+    min-height: 180px;
+    padding: 12px;
+    resize: vertical;
+    background: var(--color-surface);
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    color: var(--color-text);
+    font: inherit;
+    line-height: 1.5;
+}
+
+.field textarea:focus {
+    outline: 3px solid rgba(21, 94, 239, 0.15);
+    outline-offset: 2px;
+    border-color: var(--color-primary);
+}
+
+.field [aria-invalid="true"] {
+    border-color: var(--color-danger);
+}
+
+.field-error {
+    margin: 0;
+    color: var(--color-danger);
+    font-size: 0.875rem;
+}
+
+.field > .muted {
+    margin: 0;
+    font-size: 0.875rem;
+}
+.success-message {
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    border: 1px solid #abefc6;
+    border-radius: 9px;
+    background: var(--color-success-bg);
+    color: var(--color-success);
+}
+.page-actions {
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}

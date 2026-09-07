@@ -33,7 +33,14 @@
                 <span>toplam kayıt</span>
             </div>
         </section>
-
+        <nav class="filter-actions page-actions" aria-label="Bildirim yönetimi">
+            <a class="button button--primary" th:href="@{/admin/notifications/new}">
+                Bildirim gönder
+            </a>
+            <a class="button button--secondary" th:href="@{/admin/templates}">
+                Şablonlar
+            </a>
+        </nav>
         <section class="panel filter-panel">
             <form method="get" th:action="@{/admin/notifications}" class="filter-form">
 

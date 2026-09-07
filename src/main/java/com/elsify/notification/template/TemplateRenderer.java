@@ -13,22 +13,18 @@ import java.util.regex.Pattern;
 @Component
 public class TemplateRenderer {
 
-    private static final Pattern PLACEHOLDER_PATTERN =
-            Pattern.compile("\\{\\{([A-Za-z][A-Za-z0-9_]*)\\}\\}");
+    private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\{\\{([A-Za-z][A-Za-z0-9_]*)\\}\\}");
 
     public RenderedTemplate render(
             NotificationTemplate template,
-            Map<String, String> variables
-    ) {
-        Map<String, String> suppliedVariables =
-                variables == null ? Map.of() : variables;
+            Map<String, String> variables) {
+        Map<String, String> suppliedVariables = variables == null ? Map.of() : variables;
 
-        Set<String> expectedVariables = new TreeSet<>();
-        expectedVariables.addAll(findVariables(template.getSubject()));
-        expectedVariables.addAll(findVariables(template.getBody()));
+        Set<String> expectedVariables = findRequiredVariables(
+                template.getSubject(),
+                template.getBody());
 
-        Set<String> providedVariables =
-                new TreeSet<>(suppliedVariables.keySet());
+        Set<String> providedVariables = new TreeSet<>(suppliedVariables.keySet());
 
         Set<String> missingVariables = new TreeSet<>(expectedVariables);
         missingVariables.removeAll(providedVariables);
@@ -39,15 +35,23 @@ public class TemplateRenderer {
         if (!missingVariables.isEmpty() || !unexpectedVariables.isEmpty()) {
             throw new TemplateVariableException(
                     missingVariables,
-                    unexpectedVariables
-            );
+                    unexpectedVariables);
         }
 
         return new RenderedTemplate(
                 template.getChannel(),
                 renderText(template.getSubject(), suppliedVariables),
-                renderText(template.getBody(), suppliedVariables)
-        );
+                renderText(template.getBody(), suppliedVariables));
+    }
+
+    public Set<String> findRequiredVariables(
+            String subject,
+            String body) {
+        Set<String> variables = new TreeSet<>();
+        variables.addAll(findVariables(subject));
+        variables.addAll(findVariables(body));
+
+        return variables;
     }
 
     private Set<String> findVariables(String text) {
@@ -67,8 +71,7 @@ public class TemplateRenderer {
 
     private String renderText(
             String text,
-            Map<String, String> variables
-    ) {
+            Map<String, String> variables) {
         if (text == null) {
             return null;
         }
@@ -82,8 +85,7 @@ public class TemplateRenderer {
 
             matcher.appendReplacement(
                     result,
-                    Matcher.quoteReplacement(replacement)
-            );
+                    Matcher.quoteReplacement(replacement));
         }
 
         matcher.appendTail(result);
