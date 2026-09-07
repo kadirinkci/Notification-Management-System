@@ -24,7 +24,9 @@
         <a class="back-link" th:href="@{/admin/notifications}">
             ← Bildirim listesine dön
         </a>
-
+        <p class="success-message" role="status" th:if="${successMessage != null}" th:text="${successMessage}">
+            Bildirim kaydedildi ve gönderim için kuyruğa alındı.
+        </p>
         <article class="panel detail-card">
             <header class="detail-card__header">
                 <h1 th:text="${'Bildirim #' + notification.id}">

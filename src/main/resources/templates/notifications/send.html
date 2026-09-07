@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bildirim Gönder | Yönetim Paneli</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body>
+<header class="topbar">
+    <div class="shell topbar__content">
+        <a class="brand" th:href="@{/admin/notifications}">
+            Notification Management
+        </a>
+        <span class="topbar__label">Yönetim Paneli</span>
+    </div>
+</header>
+
+<main class="shell page">
+    <a class="back-link" th:href="@{/admin/notifications}">
+        ← Bildirim listesine dön
+    </a>
+
+    <section class="page-heading">
+        <div>
+            <h1>Bildirim gönder</h1>
+            <p class="page-description">
+                Önce şablon seçin veya doğrudan içerik yazarak devam edin.
+            </p>
+        </div>
+    </section>
+
+    <section class="panel filter-panel">
+        <form method="get"
+              th:action="@{/admin/notifications/new}"
+              class="detail-grid">
+            <div class="field detail-field--full">
+                <label for="templateChoice">Şablon</label>
+                <select id="templateChoice" name="templateId">
+                    <option value="">Şablonsuz gönderim</option>
+                    <option th:each="template : ${templateChoices}"
+                            th:value="${template.id}"
+                            th:selected="${template.id == sendForm.templateId}"
+                            th:text="${template.code + ' — ' + template.channel}">
+                        WELCOME_EMAIL
+                    </option>
+                </select>
+                <p class="muted">
+                    Seçimi uygulamak aşağıdaki formu yeniden açar;
+                    henüz kaydedilmemiş alanlar sıfırlanır.
+                </p>
+            </div>
+            <div class="filter-actions detail-field--full">
+                <button type="submit" class="button button--secondary">
+                    Seçimi uygula
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <section class="panel">
+        <form method="post"
+              th:action="@{/admin/notifications/send}"
+              th:object="${sendForm}"
+              class="detail-grid">
+
+            <input type="hidden" th:field="*{templateId}">
+
+            <div class="detail-field--full"
+                 role="alert"
+                 th:if="${#fields.hasAnyErrors()}">
+                <p class="field-error"
+                   th:each="error : ${#fields.allErrors()}"
+                   th:text="${error}">
+                    Gönderim bilgilerini kontrol edin.
+                </p>
+            </div>
+
+            <div class="detail-field--full"
+                 th:if="${selectedTemplate != null}">
+                <p>
+                    <strong th:text="${selectedTemplate.code}">Şablon</strong>
+                    <span class="badge"
+                          th:classappend="${'badge--' + selectedTemplate.channel.name()}"
+                          th:text="${selectedTemplate.channel}">
+                        EMAIL
+                    </span>
+                </p>
+                <p class="muted">
+                    Kanal, konu ve içerik seçilen şablondan alınacak.
+                </p>
+            </div>
+
+            <div class="field detail-field--full"
+                 th:if="${sendForm.templateId == null}">
+                <label for="channel">Kanal</label>
+                <select id="channel" th:field="*{channel}" required>
+                    <option value="">Kanal seçin</option>
+                    <option th:each="channelOption : ${channels}"
+                            th:value="${channelOption}"
+                            th:text="${channelOption}">
+                        EMAIL
+                    </option>
+                </select>
+            </div>
+
+            <div class="field detail-field--full"
+                 th:if="${sendForm.templateId == null}">
+                <label for="subject">Konu (isteğe bağlı)</label>
+                <input id="subject"
+                       type="text"
+                       th:field="*{subject}"
+                       maxlength="255">
+            </div>
+
+            <div class="field detail-field--full"
+                 th:if="${sendForm.templateId == null}">
+                <label for="content">İçerik</label>
+                <textarea id="content"
+                          th:field="*{content}"
+                          rows="6"
+                          required></textarea>
+            </div>
+
+            <div class="field"
+                 th:each="variableName : ${variableNames}">
+                <label th:for="${'variable-' + variableName}"
+                       th:text="${variableName}">
+                    name
+                </label>
+                <input type="text"
+                       th:id="${'variable-' + variableName}"
+                       th:name="${'variables[' + variableName + ']'}"
+                       th:value="${sendForm.variables[variableName]}"
+                       required>
+            </div>
+
+            <div class="detail-field--full">
+                <h2>Alıcı bilgileri</h2>
+                <p class="muted">
+                    EMAIL için e-posta, SMS için telefon,
+                    PUSH için cihaz tokenı girin.
+                </p>
+            </div>
+
+            <div class="field">
+                <label for="email">E-posta</label>
+                <input id="email"
+                       type="email"
+                       th:field="*{email}"
+                       maxlength="255">
+            </div>
+
+            <div class="field">
+                <label for="phoneNumber">Telefon</label>
+                <input id="phoneNumber"
+                       type="tel"
+                       th:field="*{phoneNumber}"
+                       maxlength="50"
+                       placeholder="+905551234567">
+            </div>
+
+            <div class="field detail-field--full">
+                <label for="deviceToken">Cihaz tokenı</label>
+                <input id="deviceToken"
+                       type="text"
+                       th:field="*{deviceToken}"
+                       maxlength="255">
+            </div>
+
+            <div class="filter-actions detail-field--full">
+                <button type="submit" class="button button--primary">
+                    Gönderimi başlat
+                </button>
+                <a class="button button--secondary"
+                   th:href="@{/admin/notifications}">
+                    İptal
+                </a>
+            </div>
+        </form>
+    </section>
+</main>
+</body>
+</html>

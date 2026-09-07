@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${templateId != null
+    ? 'Şablonu Düzenle | Yönetim Paneli'
+    : 'Yeni Şablon | Yönetim Paneli'}">
+        Şablon | Yönetim Paneli
+    </title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="shell topbar__content">
+            <a class="brand" th:href="@{/admin/notifications}">
+                Notification Management
+            </a>
+            <span class="topbar__label">Yönetim Paneli</span>
+        </div>
+    </header>
+
+    <main class="shell page">
+        <a class="back-link" th:href="@{/admin/templates}">
+            ← Şablon listesine dön
+        </a>
+
+        <section class="page-heading">
+            <div>
+                <h1 th:text="${templateId != null ? 'Şablonu düzenle' : 'Yeni şablon'}">
+                    Yeni şablon
+                </h1>
+                <p class="page-description">
+                    Tekrar kullanabileceğiniz bir bildirim içeriği oluşturun.
+                </p>
+            </div>
+        </section>
+
+        <section class="panel">
+            <form method="post" th:action="${templateId != null}
+          ? @{/admin/templates/{id}(id=${templateId})}
+          : @{/admin/templates}" th:object="${templateForm}" class="detail-grid">
+
+                <div class="field">
+                    <label for="code">Şablon kodu</label>
+                    <input type="text" id="code" th:field="*{code}" maxlength="100" placeholder="WELCOME_EMAIL"
+                        aria-describedby="code-error" th:attr="aria-invalid=${#fields.hasErrors('code')}" required>
+                    <p id="code-error" class="field-error" th:if="${#fields.hasErrors('code')}" th:errors="*{code}">
+                        Şablon kodu hatası
+                    </p>
+                </div>
+
+                <div class="field">
+                    <label for="channel">Kanal</label>
+                    <select id="channel" th:field="*{channel}" aria-describedby="channel-error"
+                        th:attr="aria-invalid=${#fields.hasErrors('channel')}" required>
+                        <option value="">Kanal seçin</option>
+                        <option th:each="channelOption : ${channels}" th:value="${channelOption}"
+                            th:text="${channelOption}">
+                            EMAIL
+                        </option>
+                    </select>
+                    <p id="channel-error" class="field-error" th:if="${#fields.hasErrors('channel')}"
+                        th:errors="*{channel}">
+                        Kanal hatası
+                    </p>
+                </div>
+
+                <div class="field detail-field--full">
+                    <label for="subject">Konu (isteğe bağlı)</label>
+                    <input type="text" id="subject" th:field="*{subject}" maxlength="255"
+                        placeholder="Hoş geldin, {{name}}!" aria-describedby="subject-error"
+                        th:attr="aria-invalid=${#fields.hasErrors('subject')}">
+                    <p id="subject-error" class="field-error" th:if="${#fields.hasErrors('subject')}"
+                        th:errors="*{subject}">
+                        Konu hatası
+                    </p>
+                </div>
+
+                <div class="field detail-field--full">
+                    <label for="body">İçerik</label>
+                    <textarea id="body" th:field="*{body}" rows="8" aria-describedby="body-help body-error"
+                        th:attr="aria-invalid=${#fields.hasErrors('body')}" required></textarea>
+                    <p id="body-help" class="muted">
+                        Değişkenleri {{name}} biçiminde yazabilirsiniz.
+                        Örnek: Merhaba {{name}}, hesabınız hazır.
+                    </p>
+                    <p id="body-error" class="field-error" th:if="${#fields.hasErrors('body')}" th:errors="*{body}">
+                        İçerik hatası
+                    </p>
+                </div>
+
+                <div class="filter-actions detail-field--full">
+                    <button type="submit" class="button button--primary" th:text="${templateId != null
+            ? 'Değişiklikleri kaydet'
+            : 'Şablonu kaydet'}">
+                        Şablonu kaydet
+                    </button>
+                    <a class="button button--secondary" th:href="@{/admin/templates}">
+                        İptal
+                    </a>
+                </div>
+            </form>
+        </section>
+    </main>
+</body>
+
+</html>

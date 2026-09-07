@@ -445,3 +445,49 @@ http://localhost:8080/admin/notifications/{id}
 ```
 
 Arayüz aynı Spring Boot uygulaması içinde çalıştığı için ayrı bir frontend sunucusu veya CORS yapılandırması gerekmez.
+
+## Arayüzden bildirim gönderme ve şablon yönetimi
+
+Bildirim listesindeki **Bildirim gönder** ve **Şablonlar** bağlantılarıyla ilgili ekranlara erişilebilir.
+
+### Şablon yönetimi
+
+- Liste: `/admin/templates`
+- Oluşturma: `/admin/templates/new`
+- Düzenleme: `/admin/templates/{id}/edit`
+
+Şablon kodu, kanal, konu ve içerik form üzerinden yönetilir. Aynı kodla ikinci bir şablon oluşturulamaz. Validasyon hatalarında girilen değerler korunur ve hata mesajları formda gösterilir.
+
+Konu ve içerikte değişken kullanılabilir:
+
+```text
+Konu: Hoş geldin, {{name}}!
+İçerik: Merhaba {{name}}, hesabınız hazır.
+```
+
+### Bildirim gönderme
+
+Gönderim formu: `/admin/notifications/new`
+
+İki gönderim biçimi desteklenir:
+
+- **Şablonsuz:** Kanal, konu, içerik ve alıcı bilgileri girilir.
+- **Şablonlu:** Şablon seçilip **Seçimi uygula** butonuna basılır. Konu ve içerikteki değişkenler için alanlar otomatik oluşturulur. Kanal, konu ve içerik sunucudaki şablondan alınır.
+
+Şablon seçimini uygulamak formu yeniden açar ve henüz gönderilmemiş alanları sıfırlar.
+
+Başarılı işlemden sonra bildirim detayına yönlendirilir ve onay mesajı gösterilir. Gönderim RabbitMQ üzerinden arka planda işlenir; son durum detay sayfası yenilenerek görülebilir.
+
+Formlarda tarayıcı doğrulamalarına ek olarak sunucu tarafında Bean Validation ve mevcut servis kontrolleri uygulanır. Hatalı gönderimlerde form değerleri korunur.
+
+### Yerel doğrulama
+
+- Şablon oluşturma, düzenleme ve mükerrer kod kontrolü
+- Şablon değişkenleri doldurularak EMAIL gönderimi ve MailHog kontrolü
+- Şablonsuz mock SMS gönderimi
+- Eksik alıcı bilgisinde form hatası
+- Boş içerikli isteğin bildirim servisine ulaşmadığını doğrulayan otomatik test:
+
+```bash
+./mvnw -Dtest=NotificationSendViewControllerTests test
+```
