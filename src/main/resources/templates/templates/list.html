@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Şablonlar | Yönetim Paneli</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="shell topbar__content">
+            <a class="brand" th:href="@{/admin/notifications}">
+                Notification Management
+            </a>
+            <span class="topbar__label">Yönetim Paneli</span>
+        </div>
+    </header>
+
+    <main class="shell page">
+        <a class="back-link" th:href="@{/admin/notifications}">
+            ← Bildirim listesine dön
+        </a>
+
+        <section class="page-heading">
+            <div>
+                <h1>Şablonlar</h1>
+                <p class="page-description">
+                    Bildirimlerde tekrar kullanacağınız içerikleri yönetin.
+                </p>
+            </div>
+
+            <a class="button button--primary" th:href="@{/admin/templates/new}">
+                Yeni şablon
+            </a>
+        </section>
+
+        <p class="success-message" role="status" th:if="${successMessage != null}" th:text="${successMessage}">
+            Şablon başarıyla oluşturuldu.
+        </p>
+
+        <section class="panel results-panel">
+            <div class="empty-state" th:if="${templates.empty}">
+                <h2>Henüz şablon yok</h2>
+                <p>Başlamak için yeni bir şablon oluşturun.</p>
+                <a class="button button--primary" th:href="@{/admin/templates/new}">
+                    Yeni şablon
+                </a>
+            </div>
+
+            <div class="table-wrapper" th:unless="${templates.empty}">
+                <table>
+                    <caption class="visually-hidden">
+                        Bildirim şablonları
+                    </caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Kod</th>
+                            <th scope="col">Kanal</th>
+                            <th scope="col">Konu</th>
+                            <th scope="col">İşlem</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr th:each="template : ${templates.content}">
+                            <td class="action-cell">
+                                <a class="detail-link" th:href="@{/admin/templates/{id}/edit(id=${template.id})}">
+                                    Düzenle
+                                </a>
+                            </td>
+                            <td class="id-cell" th:text="${'#' + template.id}">
+                                #1
+                            </td>
+                            <td th:text="${template.code}">
+                                WELCOME_EMAIL
+                            </td>
+                            <td>
+                                <span class="badge" th:classappend="${'badge--' + template.channel.name()}"
+                                    th:text="${template.channel}">
+                                    EMAIL
+                                </span>
+                            </td>
+                            <td class="subject-cell" th:text="${#strings.isEmpty(template.subject)
+                            ? 'Konu yok'
+                            : template.subject}">
+                                Hoş geldiniz
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <nav class="pagination" aria-label="Şablon sayfaları" th:if="${templates.totalPages > 1}">
+
+                <a class="pagination__button" th:if="${templates.hasPrevious()}"
+                    th:href="@{/admin/templates(page=${templates.number - 1})}">
+                    Önceki
+                </a>
+
+                <span class="pagination__button is-disabled" th:unless="${templates.hasPrevious()}">
+                    Önceki
+                </span>
+
+                <span class="pagination__summary">
+                    Sayfa
+                    <strong th:text="${templates.number + 1}">1</strong>
+                    /
+                    <span th:text="${templates.totalPages}">1</span>
+                </span>
+
+                <a class="pagination__button" th:if="${templates.hasNext()}"
+                    th:href="@{/admin/templates(page=${templates.number + 1})}">
+                    Sonraki
+                </a>
+
+                <span class="pagination__button is-disabled" th:unless="${templates.hasNext()}">
+                    Sonraki
+                </span>
+            </nav>
+        </section>
+    </main>
+</body>
+
+</html>
