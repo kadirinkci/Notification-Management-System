@@ -1,6 +1,7 @@
 package com.elsify.notification.service;
 
 import com.elsify.notification.domain.Status;
+import com.elsify.notification.metrics.NotificationMetrics;
 import com.elsify.notification.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class NotificationFailureService {
 
     private final NotificationRepository notificationRepository;
+    private final NotificationMetrics notificationMetrics;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void markFailed(
@@ -28,6 +30,11 @@ public class NotificationFailureService {
                                     == Status.PENDING) {
 
                                 notification.setStatus(
+                                        Status.FAILED
+                                );
+
+                                notificationMetrics.recordOutcome(
+                                        notification.getChannel(),
                                         Status.FAILED
                                 );
 
