@@ -4,7 +4,9 @@ import com.elsify.notification.domain.Notification;
 import com.elsify.notification.domain.Status;
 import com.elsify.notification.exception.PermanentNotificationException;
 import com.elsify.notification.exception.TransientNotificationException;
+import com.elsify.notification.metrics.NotificationMetrics;
 import com.elsify.notification.repository.NotificationRepository;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.MailException;
@@ -20,6 +22,7 @@ public class NotificationMessageProcessor {
 
     private final NotificationRepository notificationRepository;
     private final NotificationDispatchService dispatchService;
+    private final NotificationMetrics notificationMetrics;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public boolean process(Long notificationId) {
@@ -41,8 +44,19 @@ public class NotificationMessageProcessor {
             return false;
         }
 
+        Timer.Sample deliveryTimer =
+                notificationMetrics.startDeliveryTimer();
+
+        Status metricStatus = Status.FAILED;
+
         try {
             dispatchService.dispatch(notification);
+            metricStatus = Status.SENT;
+
+            notificationMetrics.recordOutcome(
+                    notification.getChannel(),
+                    Status.SENT
+            );
 
             log.info(
                     "Notification processing completed: id={}, status={}",
@@ -70,6 +84,12 @@ public class NotificationMessageProcessor {
             throw new PermanentNotificationException(
                     "Unexpected notification delivery failure",
                     exception
+            );
+        } finally {
+            notificationMetrics.recordDuration(
+                    notification.getChannel(),
+                    metricStatus,
+                    deliveryTimer
             );
         }
     }

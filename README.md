@@ -529,3 +529,63 @@ hesabına dahil edilmez.
 Dashboard açıldığında veriler otomatik yüklenir ve her 15 saniyede bir
 yenilenir. **Şimdi yenile** düğmesiyle manuel yenileme de yapılabilir.
 Yenileme başarısız olursa son başarılı veriler ekranda korunur.
+
+## Prometheus ve Grafana ile operasyonel izleme
+
+Uygulama, Spring Boot Actuator ve Micrometer üzerinden Prometheus formatında
+metrik yayınlar:
+
+```text
+http://localhost:8080/actuator/prometheus
+```
+
+Prometheus hedef durumu:
+
+```text
+http://localhost:9090/targets
+```
+
+Grafana:
+
+```text
+http://localhost:3000
+```
+
+Yerel Grafana giriş bilgileri varsayılan olarak `admin / admin` şeklindedir.
+Bu bilgiler `GRAFANA_ADMIN_USER` ve `GRAFANA_ADMIN_PASSWORD` ortam
+değişkenleriyle değiştirilebilir.
+
+İzleme servislerini başlatmak için:
+
+```bash
+docker compose up -d rabbitmq prometheus grafana
+```
+
+Ardından Spring Boot uygulaması başlatılır:
+
+```bash
+./mvnw spring-boot:run
+```
+
+Prometheus, Docker içerisinden host makinedeki uygulamanın
+`/actuator/prometheus` endpoint'ini her 5 saniyede bir tarar.
+
+Uygulamaya özel metrikler:
+
+| Metrik | Açıklama | Etiketler |
+|---|---|---|
+| `notification_delivery_outcomes_total` | Nihai SENT ve FAILED bildirim sayısı | `channel`, `status` |
+| `notification_delivery_duration_seconds_count` | Gerçekleşen gönderim denemesi sayısı | `channel`, `status` |
+| `notification_delivery_duration_seconds_sum` | Gönderim denemelerinin toplam süresi | `channel`, `status` |
+
+Özel sayaçlar uygulama başladıktan sonra gerçekleşen gönderimlerle oluşur.
+Uygulama yeniden başladığında Micrometer sayaçları sıfırlanır; Prometheus daha
+önce topladığı zaman serilerini kendi veri hacminde saklar.
+
+### Uygulama içi dashboard
+
+![Uygulama içi bildirim dashboard'u](docs/images/in-app-dashboard.png)
+
+### Grafana dashboard
+
+![Grafana bildirim metrikleri dashboard'u](docs/images/grafana-dashboard.png)
