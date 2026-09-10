@@ -1,6 +1,47 @@
 # Notification Management System
 
+[![CI](https://github.com/kadirinkci/Notification-Management-System/actions/workflows/ci.yml/badge.svg)](https://github.com/kadirinkci/Notification-Management-System/actions/workflows/ci.yml)
+
 E-posta, SMS ve push kanallarını destekleyecek bildirim yönetim sistemi.
+
+## Mimari
+
+```mermaid
+flowchart LR
+    Client[REST istemcisi / Yönetim UI] --> Controller[Controller katmanı]
+
+    subgraph Application[Spring Boot uygulaması]
+        Controller --> Service[NotificationService]
+        Service --> Database[(PostgreSQL)]
+        Service --> Event[Transaction sonrası event]
+        Event --> Producer[Message Producer]
+
+        Consumer[Message Consumer] --> RateLimiter[Channel Rate Limiter]
+        RateLimiter --> Processor[Message Processor]
+        Processor --> Registry[Channel Registry]
+        Processor --> Attempts[Gönderim denemeleri]
+        Attempts --> Database
+
+        Registry --> Email[Email Sender]
+        Registry --> Sms[SMS Sender]
+        Registry --> Push[Push Sender]
+        Registry --> Log[Log Sender]
+
+        Processor --> Metrics[Micrometer metrikleri]
+        Metrics --> Actuator[Actuator]
+    end
+
+    Producer --> RabbitMQ[(RabbitMQ / Retry / DLQ)]
+    RabbitMQ --> Consumer
+
+    Email --> MailHog[MailHog / SMTP]
+    Sms --> SmsProvider[SMS Provider]
+    Push --> PushProvider[Push Provider]
+    Log --> AppLog[Uygulama logu]
+
+    Actuator --> Prometheus[Prometheus]
+    Prometheus --> Grafana[Grafana]
+```
 
 ## Gereksinimler
 
@@ -639,3 +680,33 @@ target/site/jacoco/index.html
 Testcontainers ilk çalıştırmada gerekli PostgreSQL ve RabbitMQ imajlarını
 indirebilir. Testler yerel veritabanını değiştirmez; her çalışma için izole
 konteynerler kullanır.
+
+## CI/CD
+
+GitHub Actions workflow'u `.github/workflows/ci.yml` dosyasında bulunur.
+
+Her push ve `main` branch'ine açılan her pull request için:
+
+- Java 21 ortamı hazırlanır.
+- Maven bağımlılıkları önbelleğe alınır.
+- Unit ve Testcontainers entegrasyon testleri çalıştırılır.
+- JaCoCo kapsam raporu oluşturulur.
+- Kapsam raporu workflow artifact'i olarak yüklenir.
+
+`main` branch'ine yapılan başarılı push sonrasında uygulama Docker imajı
+oluşturulur ve GitHub Container Registry'ye iki etiketle gönderilir:
+
+```text
+ghcr.io/kadirinkci/notification-management-system:latest
+ghcr.io/kadirinkci/notification-management-system:<commit-sha>
+```
+
+Yayınlanan son imajı indirmek için:
+
+```bash
+docker pull ghcr.io/kadirinkci/notification-management-system:latest
+```
+
+Docker imajı yalnızca bütün build ve test adımları başarılı olduğunda
+yayınlanır. Registry erişimi için GitHub Actions tarafından sağlanan
+`GITHUB_TOKEN` kullanılır; kaynak kodda erişim anahtarı tutulmaz.
