@@ -589,3 +589,37 @@ Uygulama yeniden başladığında Micrometer sayaçları sıfırlanır; Promethe
 ### Grafana dashboard
 
 ![Grafana bildirim metrikleri dashboard'u](docs/images/grafana-dashboard.png)
+
+## Testler ve kapsam raporu
+
+Projede servis ve kanal göndericileri için unit testler, kritik bildirim
+akışı için Testcontainers tabanlı entegrasyon testi bulunur.
+
+Entegrasyon testi izole PostgreSQL ve RabbitMQ konteynerleri başlatır ve şu
+akışı doğrular:
+
+```text
+bildirim oluştur → RabbitMQ kuyruğuna gönder → tüket → gönder → SENT
+```
+
+Tüm testleri çalıştırmak için Docker Desktop açık olmalıdır:
+
+```bash
+./mvnw test
+```
+
+Testleri çalıştırıp JaCoCo kapsam raporunu oluşturmak için:
+
+```bash
+./mvnw verify
+```
+
+HTML kapsam raporu şu konumda oluşur:
+
+```text
+target/site/jacoco/index.html
+```
+
+Testcontainers ilk çalıştırmada gerekli PostgreSQL ve RabbitMQ imajlarını
+indirebilir. Testler yerel veritabanını değiştirmez; her çalışma için izole
+konteynerler kullanır.
