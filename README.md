@@ -4,46 +4,68 @@ E-posta, SMS ve push kanallarını destekleyecek bildirim yönetim sistemi.
 
 ## Gereksinimler
 
-- Java 21
-- PostgreSQL
-- Maven Wrapper
-- MailHog (lokal e-posta testi)
-- Docker Desktop (RabbitMQ için)
+Sistemin tamamını çalıştırmak için yalnızca Docker Desktop gereklidir.
 
-## Veritabanı
+Yerel geliştirme yapmak istersen Java 21, PostgreSQL, RabbitMQ ve MailHog
+ayrıca kurulabilir. Önerilen çalıştırma yöntemi Docker Compose kullanmaktır.
 
-PostgreSQL üzerinde veritabanını oluştur:
+## Docker ile tek komut kurulum
 
-```sql
-CREATE DATABASE notification_db;
+Uygulama ve tüm bağımlılıkları aşağıdaki komutla oluşturulup başlatılır:
+
+```bash
+docker compose up -d --build
 ```
 
-Bağlantı ayarları `src/main/resources/application.yml` dosyasındadır.
+Servislerin durumunu kontrol etmek için:
 
-## Uygulamayı çalıştırma
-
-```powershell
-docker compose up -d rabbitmq
-.\mvnw.cmd spring-boot:run
+```bash
+docker compose ps
 ```
+
+Başlatılan servisler:
+
+| Servis | Adres veya bağlantı |
+|---|---|
+| Bildirim arayüzü | `http://localhost:8080/admin/notifications` |
+| Uygulama dashboard'u | `http://localhost:8080/admin/dashboard` |
+| MailHog | `http://localhost:8025` |
+| RabbitMQ yönetimi | `http://localhost:15672` |
+| Prometheus | `http://localhost:9090` |
+| Grafana | `http://localhost:3000` |
+| PostgreSQL | `localhost:5433` |
+
+Yerel kullanıcı bilgileri:
+
+| Servis | Kullanıcı | Parola |
+|---|---|---|
+| PostgreSQL | `notification` | `notification` |
+| RabbitMQ | `notification` | `notification` |
+| Grafana | `admin` | `admin` |
+
+PostgreSQL veritabanı adı `notification_db` şeklindedir. Bilgisayardaki
+yerel PostgreSQL ile port çakışmaması için konteyner dışına `5433` portuyla
+açılır. Uygulama konteyneri PostgreSQL'e Compose ağı üzerinden bağlanır.
+
+Uygulama başlarken Flyway gerekli tabloları otomatik oluşturur.
 
 ## Doğrulama
 
-Uygulama çalışırken health endpoint’ini kontrol et:
+Uygulama sağlık durumunu kontrol etmek için:
 
-```powershell
-Invoke-RestMethod http://localhost:8080/actuator/health
+```text
+http://localhost:8080/actuator/health
 ```
 
-Beklenen durum: `UP`.
+Beklenen durum `UP` değeridir.
 
-Flyway başlangıç sırasında `recipient`, `notification`, `notification_template` ve `flyway_schema_history` tablolarını oluşturur.
+Sistemi durdurmak için:
 
-## Test
-
-```powershell
-.\mvnw.cmd test
+```bash
+docker compose down
 ```
+
+Bu komut kalıcı Docker volume'larını silmez.
 
 ## REST API
 
@@ -555,19 +577,13 @@ Yerel Grafana giriş bilgileri varsayılan olarak `admin / admin` şeklindedir.
 Bu bilgiler `GRAFANA_ADMIN_USER` ve `GRAFANA_ADMIN_PASSWORD` ortam
 değişkenleriyle değiştirilebilir.
 
-İzleme servislerini başlatmak için:
+İzleme servisleri ve uygulama birlikte başlatılır:
 
 ```bash
-docker compose up -d rabbitmq prometheus grafana
+docker compose up -d --build
 ```
 
-Ardından Spring Boot uygulaması başlatılır:
-
-```bash
-./mvnw spring-boot:run
-```
-
-Prometheus, Docker içerisinden host makinedeki uygulamanın
+Prometheus, Compose ağı üzerinden `app:8080` adresindeki uygulamanın
 `/actuator/prometheus` endpoint'ini her 5 saniyede bir tarar.
 
 Uygulamaya özel metrikler:

@@ -1,0 +1,11 @@
+.git
+.github
+.idea
+.vscode
+.vs
+target
+docs
+monitoring
+README.md
+compose.yml
+*.log
